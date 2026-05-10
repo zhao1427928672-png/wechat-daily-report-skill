@@ -3,51 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>演示群2日报演示 · 2026-05-10</title>
+  <title>金刚功打卡交流群 · 2026-05-10</title>
   <style>
-    :root { color-scheme: light; --ink: #18231f; --muted: #66736d; --line: #dbe5dc; --paper: #fbfaf5; --panel: #ffffff; --accent: #b95f2b; --accent-soft: #f5e7dc; --green: #2b6d58; }
+    :root { color-scheme: light; --ink: #17211d; --muted: #61706a; --line: #d7e2d9; --paper: #f7f5ee; --panel: rgba(255,255,255,.86); --accent: #a85226; --accent-soft: #f4e3d7; --green: #2f6d59; }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: linear-gradient(135deg, #eef4ec 0%, var(--paper) 48%, #eef2f6 100%); }
-    main { width: min(1060px, calc(100vw - 48px)); margin: 0 auto; padding: 72px 0 88px; }
-    .eyebrow { color: var(--accent); font-size: 13px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
-    .hero { margin-top: 38px; padding: 34px; border-radius: 8px; color: #fff9ed; background: linear-gradient(135deg, rgba(31, 43, 36, .96), rgba(54, 73, 84, .92), rgba(116, 55, 35, .88)); }
-    h1 { margin: 10px 0 14px; font-size: clamp(42px, 7vw, 76px); line-height: 1; letter-spacing: 0; }
-    .hero p { width: min(760px, 100%); color: rgba(255, 249, 237, .82); font-size: 18px; line-height: 1.8; }
-    .hero-grid, .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 30px; }
-    .hero-metric { padding: 18px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; background: rgba(255,255,255,.08); }
-    .hero-metric strong { display: block; font-size: 34px; }
-    .hero-metric span { display: block; margin-top: 8px; color: rgba(255,249,237,.72); font-size: 14px; }
-    .section-title { margin: 46px 0 16px; font-size: 32px; letter-spacing: 0; }
-    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
-    .card, .notice { border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, .78); box-shadow: 0 18px 50px rgba(36, 48, 40, .06); }
-    .card { padding: 24px; min-height: 150px; }
-    .card h2 { margin: 0 0 12px; font-size: 22px; letter-spacing: 0; }
-    .card p { margin: 0; color: var(--muted); line-height: 1.75; }
-    .notice { margin-top: 32px; padding: 18px 20px; color: var(--green); background: #eef6ef; }
-    @media (max-width: 720px) { main { width: min(100vw - 28px, 1060px); padding-top: 36px; } .hero-grid, .cards { grid-template-columns: 1fr; } }
+    body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: radial-gradient(circle at top left, #edf3ea 0%, #f7f5ee 44%, #eef2f7 100%); }
+    main { width: min(1080px, calc(100vw - 40px)); margin: 0 auto; padding: 56px 0 88px; }
+    .eyebrow { color: var(--accent); font-size: 13px; font-weight: 800; text-transform: uppercase; }
+    .hero { padding: 34px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; background: linear-gradient(135deg, rgba(22,32,28,.96), rgba(46,65,75,.92), rgba(111,57,36,.86)); color: #fff8ee; box-shadow: 0 28px 60px rgba(32, 45, 39, .18); }
+    h1 { margin: 12px 0 10px; font-size: clamp(38px, 7vw, 74px); line-height: .96; }
+    .lead { width: min(760px, 100%); margin: 0; color: rgba(255,248,238,.84); line-height: 1.8; font-size: 18px; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+    .metric { padding: 18px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; background: rgba(255,255,255,.08); }
+    .metric strong { display: block; font-size: 32px; line-height: 1; }
+    .metric span { display: block; margin-top: 8px; font-size: 14px; color: rgba(255,248,238,.72); }
+    .section-title { margin: 42px 0 16px; font-size: 30px; }
+    .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .card { padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: 0 18px 50px rgba(36, 48, 40, .06); }
+    .card-index { color: var(--accent); font-size: 12px; font-weight: 800; }
+    .card h3 { margin: 10px 0 10px; font-size: 24px; }
+    .card p { margin: 0; color: var(--muted); line-height: 1.8; }
+    .chips, .hot-words { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .chip, .hot-word { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700; }
+    .panel { padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: 0 18px 50px rgba(36, 48, 40, .06); }
+    .panel p { margin: 0; color: var(--muted); line-height: 1.85; }
+    .notice { margin-top: 18px; padding: 16px 18px; border-radius: 10px; background: #edf5ef; color: var(--green); }
+    @media (max-width: 760px) { main { width: min(100vw - 24px, 1080px); padding-top: 30px; } .metrics, .cards { grid-template-columns: 1fr; } h1 { font-size: 46px; } }
   </style>
 </head>
 <body>
   <main>
-    <div class="eyebrow">Wechat Daily Demo · 2026-05-10</div>
     <section class="hero">
-      <div class="eyebrow">匿名群日报</div>
-      <h1>演示群2日报</h1>
-      <p>公开页面只展示日报样式和信息组织方式。真实群名、成员昵称、头像、聊天原文、链接、词云和具体讨论内容不会出现在这里。</p>
-      <div class="hero-grid">
-        <div class="hero-metric"><strong>已生成</strong><span>日报状态</span></div>
-        <div class="hero-metric"><strong>已归档</strong><span>Obsidian 私有库</span></div>
-        <div class="hero-metric"><strong>已发布</strong><span>GitHub Pages 演示</span></div>
+      <div class="eyebrow">Wechat Group Summary · 2026-05-10</div>
+      <h1>金刚功打卡交流群</h1>
+      <p class="lead">这是公开可访问的脱敏摘要页，保留当天的讨论脉络、活跃度和主题整理，但不展示原始聊天原文、成员昵称、头像、文件细节或可回溯的个人信息。</p>
+      <div class="metrics">
+        <div class="metric"><strong>120</strong><span>今日消息</span></div>
+        <div class="metric"><strong>14</strong><span>活跃成员</span></div>
+        <div class="metric"><strong>06:36 至 19:48</strong><span>活跃时段</span></div>
+        <div class="metric"><strong>77</strong><span>前三活跃成员发言合计</span></div>
       </div>
     </section>
-    <h2 class="section-title">日报结构演示</h2>
+    <h2 class="section-title">主题摘要</h2>
     <section class="cards">
-      <article class="card"><h2>今日概览</h2><p>展示当天讨论是否活跃、是否有值得复盘的内容，以及是否已经写入本地知识库。</p></article>
-      <article class="card"><h2>话题提炼</h2><p>把碎片化聊天归纳成几个主题，方便后续在 Obsidian 里继续整理成长期笔记。</p></article>
-      <article class="card"><h2>资料收纳</h2><p>识别链接、文件、工具和案例，但公开演示页不会展示真实链接或原始分享人。</p></article>
-      <article class="card"><h2>行动项</h2><p>把需要跟进的想法、问题和待办沉淀下来，第二天可以继续追踪。</p></article>
+      <article class="card"><div class="card-index">01</div><h3>今日话题 1: 抱拳 / 呲牙 / 某成员</h3><p>今天围绕 抱拳 / 呲牙 / 某成员 有多轮讨论。建议回看原始聊天，把其中的资源、观点和行动项继续沉淀到 Obsidian。</p><div class="chips"><span class="chip">抱拳</span><span class="chip">呲牙</span><span class="chip">某成员</span></div></article><article class="card"><div class="card-index">02</div><h3>今日话题 2: Peter-Awen / 引用 / 某成员</h3><p>今天围绕 Peter-Awen / 引用 / 某成员 有多轮讨论。建议回看原始聊天，把其中的资源、观点和行动项继续沉淀到 Obsidian。</p><div class="chips"><span class="chip">Peter-Awen</span><span class="chip">引用</span><span class="chip">某成员</span></div></article><article class="card"><div class="card-index">03</div><h3>今日话题 3: 系统 / 视频 / 阿文</h3><p>今天围绕 系统 / 视频 / 阿文 有多轮讨论。建议回看原始聊天，把其中的资源、观点和行动项继续沉淀到 Obsidian。</p><div class="chips"><span class="chip">系统</span><span class="chip">视频</span><span class="chip">阿文</span></div></article><article class="card"><div class="card-index">04</div><h3>今日话题 4: 有道友找到靠譜的青鹽炮附子牙粉嗎</h3><p>今天围绕 有道友找到靠譜的青鹽炮附子牙粉嗎 有多轮讨论。建议回看原始聊天，把其中的资源、观点和行动项继续沉淀到 Obsidian。</p><div class="chips"><span class="chip">有道友找到靠譜的青鹽炮附子牙粉嗎</span></div></article>
     </section>
-    <div class="notice">隐私说明：完整聊天记录和详细分析只保存在本地 Obsidian；公开页面仅用于展示产品效果。</div>
+    <h2 class="section-title">热词观察</h2>
+    <section class="panel">
+      <p>下面的关键词来自当天讨论热度，已自动过滤成员指向和可识别信息，只保留适合公开阅读的主题词。</p>
+      <div class="hot-words"><span class="hot-word">抱拳</span><span class="hot-word">呲牙</span><span class="hot-word">Peter-Awen</span><span class="hot-word">引用</span><span class="hot-word">系统</span><span class="hot-word">视频</span><span class="hot-word">阿文</span><span class="hot-word">邀请</span><span class="hot-word">加入了群聊</span><span class="hot-word">偷笑</span></div>
+      <div class="notice">隐私说明：完整聊天记录、成员身份、原始引用、媒体文件和详细分析仍只保存在本地归档中，不会出现在这个公开页面。</div>
+    </section>
   </main>
 </body>
 </html>
