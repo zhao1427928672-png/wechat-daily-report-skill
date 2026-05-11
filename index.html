@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>微信群日报演示</title>
+  <title>微信群日报</title>
   <style>
     :root {
       color-scheme: light;
@@ -93,7 +93,27 @@
       border-color: #c9d7cd;
       transform: translateY(-1px);
     }
-    .slug {
+    .left-wrap {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-width: 0;
+    }
+    .group-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      padding: 8px 14px;
+      border: 1px solid #f0d8c8;
+      border-radius: 8px;
+      background: #fff7f1;
+      color: #b95f2b;
+      font-size: 16px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .group-name {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -118,7 +138,7 @@
       main { width: min(100vw - 28px, 1040px); padding-top: 36px; }
       .summary { grid-template-columns: 1fr; }
       .report-card { grid-template-columns: 1fr; align-items: start; }
-      .slug { white-space: normal; }
+      .group-name { white-space: normal; }
       h1 { font-size: 46px; }
     }
   </style>
@@ -126,37 +146,36 @@
 <body>
   <main>
     <div class="eyebrow">Wechat Daily Archive</div>
-    <h1>微信群日报演示</h1>
-    <p class="lead">这是对外演示页，只展示日报产品形态。真实群名、成员昵称、聊天原文、链接、头像和敏感统计都已隐藏。</p>
+    <h1>微信群日报</h1>
     <section class="summary">
-      <div class="metric"><strong>23</strong><span>演示群组</span></div>
-      <div class="metric"><strong>08:30</strong><span>每天自动运行</span></div>
-      <div class="metric"><strong>0</strong><span>公开聊天原文</span></div>
+      <div class="metric"><strong>10</strong><span>群组数量</span></div>
+      <div class="metric"><strong>244</strong><span>活跃成员总计</span></div>
+      <div class="metric"><strong>2066</strong><span>消息总计</span></div>
     </section>
     <section class="grid">
-<a class="report-card" href="reports/group-9/2026-05-10/index.html"><span class="slug">九群</span><span class="day">2026-05-10</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-8/2026-05-11/index.html"><span class="slug">八群</span><span class="day">2026-05-11</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-8/2026-05-10/index.html"><span class="slug">八群</span><span class="day">2026-05-10</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-5/2026-05-02/index.html"><span class="slug">五群</span><span class="day">2026-05-02</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-5/2026-05-01/index.html"><span class="slug">五群</span><span class="day">2026-05-01</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-4/2026-05-02/index.html"><span class="slug">四群</span><span class="day">2026-05-02</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-4/2026-05-01/index.html"><span class="slug">四群</span><span class="day">2026-05-01</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-3/2026-05-02/index.html"><span class="slug">三群</span><span class="day">2026-05-02</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-3/2026-05-01/index.html"><span class="slug">三群</span><span class="day">2026-05-01</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-2/2026-05-11/index.html"><span class="slug">二群</span><span class="day">2026-05-11</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-2/2026-05-10/index.html"><span class="slug">二群</span><span class="day">2026-05-10</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-2/2026-05-09/index.html"><span class="slug">二群</span><span class="day">2026-05-09</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-2/2026-05-02/index.html"><span class="slug">二群</span><span class="day">2026-05-02</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-2/2026-05-01/index.html"><span class="slug">二群</span><span class="day">2026-05-01</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-12/2026-05-11/index.html"><span class="slug">十二群</span><span class="day">2026-05-11</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-12/2026-05-10/index.html"><span class="slug">十二群</span><span class="day">2026-05-10</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-11/2026-05-11/index.html"><span class="slug">十一群</span><span class="day">2026-05-11</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-11/2026-05-10/index.html"><span class="slug">十一群</span><span class="day">2026-05-10</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-10/2026-05-11/index.html"><span class="slug">十群</span><span class="day">2026-05-11</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-10/2026-05-10/index.html"><span class="slug">十群</span><span class="day">2026-05-10</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-1/2026-05-10/index.html"><span class="slug">一群</span><span class="day">2026-05-10</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-1/2026-05-02/index.html"><span class="slug">一群</span><span class="day">2026-05-02</span><span class="arrow">open</span></a>
-<a class="report-card" href="reports/group-1/2026-05-01/index.html"><span class="slug">一群</span><span class="day">2026-05-01</span><span class="arrow">open</span></a>
+<a class="report-card" href="reports/group-8/2026-05-11/index.html"><div class="left-wrap"><span class="group-badge">八群</span><span class="group-name">雷家山金刚长寿功来观群8</span></div><span class="day">2026-05-11</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-2/2026-05-11/index.html"><div class="left-wrap"><span class="group-badge">二群</span><span class="group-name">金刚功打卡交流群</span></div><span class="day">2026-05-11</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-12/2026-05-11/index.html"><div class="left-wrap"><span class="group-badge">十二群</span><span class="group-name">应用宝Mac版内测群</span></div><span class="day">2026-05-11</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-11/2026-05-11/index.html"><div class="left-wrap"><span class="group-badge">十一群</span><span class="group-name">摄影作品分享</span></div><span class="day">2026-05-11</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-10/2026-05-11/index.html"><div class="left-wrap"><span class="group-badge">十群</span><span class="group-name">胡子哥的咖啡坑</span></div><span class="day">2026-05-11</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-9/2026-05-10/index.html"><div class="left-wrap"><span class="group-badge">九群</span><span class="group-name">鼓宝一家亲</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-8/2026-05-10/index.html"><div class="left-wrap"><span class="group-badge">八群</span><span class="group-name">雷家山金刚长寿功来观群8</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-2/2026-05-10/index.html"><div class="left-wrap"><span class="group-badge">二群</span><span class="group-name">金刚功打卡交流群</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-12/2026-05-10/index.html"><div class="left-wrap"><span class="group-badge">十二群</span><span class="group-name">应用宝Mac版内测群</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-11/2026-05-10/index.html"><div class="left-wrap"><span class="group-badge">十一群</span><span class="group-name">摄影作品分享</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-10/2026-05-10/index.html"><div class="left-wrap"><span class="group-badge">十群</span><span class="group-name">胡子哥的咖啡坑</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-1/2026-05-10/index.html"><div class="left-wrap"><span class="group-badge">一群</span><span class="group-name">一群</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-2/2026-05-09/index.html"><div class="left-wrap"><span class="group-badge">二群</span><span class="group-name">金刚功打卡交流群</span></div><span class="day">2026-05-09</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-5/2026-05-02/index.html"><div class="left-wrap"><span class="group-badge">五群</span><span class="group-name">五群</span></div><span class="day">2026-05-02</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-4/2026-05-02/index.html"><div class="left-wrap"><span class="group-badge">四群</span><span class="group-name">四群</span></div><span class="day">2026-05-02</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-3/2026-05-02/index.html"><div class="left-wrap"><span class="group-badge">三群</span><span class="group-name">三群</span></div><span class="day">2026-05-02</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-2/2026-05-02/index.html"><div class="left-wrap"><span class="group-badge">二群</span><span class="group-name">金刚功打卡交流群</span></div><span class="day">2026-05-02</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-1/2026-05-02/index.html"><div class="left-wrap"><span class="group-badge">一群</span><span class="group-name">一群</span></div><span class="day">2026-05-02</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-5/2026-05-01/index.html"><div class="left-wrap"><span class="group-badge">五群</span><span class="group-name">五群</span></div><span class="day">2026-05-01</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-4/2026-05-01/index.html"><div class="left-wrap"><span class="group-badge">四群</span><span class="group-name">四群</span></div><span class="day">2026-05-01</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-3/2026-05-01/index.html"><div class="left-wrap"><span class="group-badge">三群</span><span class="group-name">三群</span></div><span class="day">2026-05-01</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-2/2026-05-01/index.html"><div class="left-wrap"><span class="group-badge">二群</span><span class="group-name">金刚功打卡交流群</span></div><span class="day">2026-05-01</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="reports/group-1/2026-05-01/index.html"><div class="left-wrap"><span class="group-badge">一群</span><span class="group-name">一群</span></div><span class="day">2026-05-01</span><span class="arrow">OPEN</span></a>
     </section>
   </main>
 </body>
