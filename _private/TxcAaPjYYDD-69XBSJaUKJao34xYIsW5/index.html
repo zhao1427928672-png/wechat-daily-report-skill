@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>微信群日报汇总</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18231f;
+      --muted: #64716b;
+      --line: #dbe5dc;
+      --paper: #fbfaf5;
+      --panel: #ffffff;
+      --accent: #b95f2b;
+      --accent-soft: #f5e7dc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #eef4ec 0%, var(--paper) 48%, #eef2f6 100%);
+      color: var(--ink);
+    }
+    main {
+      width: min(1080px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 60px 0 88px;
+    }
+    .eyebrow {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(48px, 9vw, 92px);
+      line-height: .94;
+      letter-spacing: 0;
+    }
+    .lead {
+      width: min(760px, 100%);
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.8;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 42px 0 26px;
+    }
+    .metric {
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .7);
+      border-radius: 10px;
+      box-shadow: 0 18px 50px rgba(36, 48, 40, .04);
+    }
+    .metric strong {
+      display: block;
+      font-size: 32px;
+      line-height: 1;
+    }
+    .metric span {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+    .report-card {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 18px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 18px 50px rgba(36, 48, 40, .06);
+    }
+    .report-card:hover { border-color: #c9d7cd; transform: translateY(-1px); }
+    .left-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .group-name { font-size: 24px; font-weight: 800; }
+    .group-meta {
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .day { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .arrow {
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .empty-state {
+      padding: 28px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      background: rgba(255,255,255,.5);
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    @media (max-width: 760px) {
+      main { width: min(100vw - 24px, 1080px); padding-top: 34px; }
+      .summary { grid-template-columns: 1fr; }
+      .report-card { grid-template-columns: 1fr; align-items: start; }
+      h1 { font-size: 50px; }
+      .group-meta { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Wechat Daily Archive</div>
+    <h1>微信群日报</h1>
+    <p class="lead">本页只展示本次任务指定并成功生成的群日报。点击 OPEN 会直接打开对应群的私密日报链接。</p>
+    <section class="summary">
+      <div class="metric"><strong>3</strong><span>本次已生成群数</span></div>
+      <div class="metric"><strong>96</strong><span>活跃成员总计</span></div>
+      <div class="metric"><strong>881</strong><span>消息总计</span></div>
+    </section>
+    <section class="grid">
+<a class="report-card" href="https://autozooker.ccwu.cc/_private/LbpF1oQ_SUpXbplWDC6OMXFEzLgkkJXV/?from=https%3A%2F%2Fautozooker.ccwu.cc%2F_private%2FTxcAaPjYYDD-69XBSJaUKJao34xYIsW5%2F"><div class="left-wrap"><span class="group-name">金刚功打卡交流群</span><span class="group-meta">168 条消息 · 14 人 · 06:36 至 21:01</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="https://autozooker.ccwu.cc/_private/zACIinTXmCOaPHO5ohVQgXMuOACaroIW/?from=https%3A%2F%2Fautozooker.ccwu.cc%2F_private%2FTxcAaPjYYDD-69XBSJaUKJao34xYIsW5%2F"><div class="left-wrap"><span class="group-name">胡子哥的咖啡坑</span><span class="group-meta">500 条消息 · 44 人 · 13:17 至 23:49</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+<a class="report-card" href="https://autozooker.ccwu.cc/_private/JC-7D7rS3HS1a-6kHPrHz9F-JMQdQudH/?from=https%3A%2F%2Fautozooker.ccwu.cc%2F_private%2FTxcAaPjYYDD-69XBSJaUKJao34xYIsW5%2F"><div class="left-wrap"><span class="group-name">摄影作品分享</span><span class="group-meta">213 条消息 · 38 人 · 00:04 至 23:09</span></div><span class="day">2026-05-10</span><span class="arrow">OPEN</span></a>
+    </section>
+  </main>
+</body>
+</html>
