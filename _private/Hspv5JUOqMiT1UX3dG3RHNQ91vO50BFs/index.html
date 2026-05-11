@@ -108,6 +108,29 @@
       font-size: 13px;
     }
 
+    .return-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(40, 122, 91, 0.18);
+      background: rgba(238, 246, 239, 0.92);
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .return-link:hover {
+      background: #e6f3e9;
+      border-color: rgba(40, 122, 91, 0.3);
+      transform: translateY(-1px);
+    }
+
     .side-section {
       margin: 20px 0;
     }
@@ -225,8 +248,8 @@
     .hero {
       position: relative;
       overflow: hidden;
-      min-height: 360px;
-      padding: 34px;
+      min-height: 208px;
+      padding: 20px 22px;
       border-radius: var(--radius);
       color: #fff9ed;
       background:
@@ -238,9 +261,9 @@
     .hero::after {
       content: "日报";
       position: absolute;
-      right: -18px;
-      bottom: -34px;
-      font-size: 170px;
+      right: -6px;
+      bottom: -18px;
+      font-size: 92px;
       font-weight: 900;
       color: rgba(255,255,255,0.08);
       line-height: 1;
@@ -256,9 +279,9 @@
       display: inline-flex;
       gap: 8px;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
       color: #ffe0b2;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -266,29 +289,29 @@
 
     .hero h2 {
       margin: 0;
-      font-size: clamp(40px, 6vw, 76px);
-      line-height: 0.95;
+      font-size: clamp(30px, 4.7vw, 50px);
+      line-height: 1.04;
       letter-spacing: 0;
     }
 
     .hero-subtitle {
-      margin: 22px 0 0;
-      max-width: 560px;
+      margin: 10px 0 0;
+      max-width: 700px;
       color: rgba(255, 249, 237, 0.78);
-      font-size: 18px;
-      line-height: 1.7;
+      font-size: 14px;
+      line-height: 1.62;
     }
 
     .metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 32px;
-      max-width: 640px;
+      gap: 10px;
+      margin-top: 14px;
+      max-width: 500px;
     }
 
     .metric {
-      padding: 16px;
+      padding: 11px 12px;
       border: 1px solid rgba(255,255,255,0.18);
       border-radius: var(--radius);
       background: rgba(255,255,255,0.1);
@@ -296,16 +319,16 @@
 
     .metric strong {
       display: block;
-      font-size: 28px;
+      font-size: 19px;
       line-height: 1;
       font-family: var(--font-mono);
     }
 
     .metric span {
       display: block;
-      margin-top: 8px;
+      margin-top: 5px;
       color: rgba(255,249,237,0.68);
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .filter-banner {
@@ -500,11 +523,38 @@
     }
 
     .bubble-name {
-      color: var(--rust);
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(180, 95, 42, 0.14);
+      color: var(--rust-deep);
       font-weight: 800;
     }
 
-    .bubble-row.is-right .bubble-name { color: var(--green); }
+    .bubble-row.is-right .bubble-name {
+      background: rgba(40, 122, 91, 0.16);
+      color: var(--green);
+    }
+
+    .name-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin: 0 4px 0 0;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.92em;
+      font-weight: 800;
+      vertical-align: baseline;
+      white-space: nowrap;
+    }
+
+    .name-pill.tone-0 { background: rgba(180, 95, 42, 0.16); color: var(--rust-deep); }
+    .name-pill.tone-1 { background: rgba(40, 122, 91, 0.16); color: var(--green); }
+    .name-pill.tone-2 { background: rgba(65, 95, 143, 0.15); color: var(--blue); }
+    .name-pill.tone-3 { background: rgba(139, 90, 134, 0.16); color: var(--violet); }
 
     .highlight {
       margin-top: 18px;
@@ -704,8 +754,8 @@
         margin-bottom: 16px;
       }
 
-      .hero { padding: 26px; min-height: 320px; }
-      .hero::after { font-size: 110px; }
+      .hero { padding: 18px; min-height: 190px; }
+      .hero::after { font-size: 72px; }
       .metrics, .card-grid, .rank-grid, .qa-card { grid-template-columns: 1fr; }
       .bubble { max-width: 84%; }
       .section-heading { display: block; }
@@ -734,7 +784,8 @@
       <div class="brand">
         <div class="brand-kicker">WeChat Daily</div>
         <h1>金刚功打卡交流群日报</h1>
-        <div class="brand-date">2026-05-11 · 07:13 至 08:36</div>
+        <div class="brand-date">2026-05-11 · 07:13 至 14:51</div>
+        <a class="return-link" id="returnToIndex" href="#" aria-label="返回汇总页">← 返回汇总页</a>
       </div>
 
       <div class="side-section">
@@ -751,27 +802,7 @@
         <button class="member-chip active" data-member="__all__">
           <span class="mini-avatar">全</span>
           <span class="member-name">全部消息</span>
-          <span class="member-count">66</span>
-        </button>
-        
-        <button class="member-chip" data-member="孙秀伶">
-          <span class="mini-avatar">
-      
-        孙
-      
-    </span>
-          <span class="member-name">孙秀伶</span>
-          <span class="member-count">30</span>
-        </button>
-        
-        <button class="member-chip" data-member="金刚功打卡交流群”的鄧ᶻᵘ">
-          <span class="mini-avatar">
-      
-        金
-      
-    </span>
-          <span class="member-name">金刚功打卡交流群”的鄧ᶻᵘ</span>
-          <span class="member-count">16</span>
+          <span class="member-count">232</span>
         </button>
         
         <button class="member-chip" data-member="阿文 Peter-Awen">
@@ -781,7 +812,27 @@
       
     </span>
           <span class="member-name">阿文 Peter-Awen</span>
-          <span class="member-count">10</span>
+          <span class="member-count">76</span>
+        </button>
+        
+        <button class="member-chip" data-member="孙秀伶">
+          <span class="mini-avatar">
+      
+        孙
+      
+    </span>
+          <span class="member-name">孙秀伶</span>
+          <span class="member-count">45</span>
+        </button>
+        
+        <button class="member-chip" data-member="金刚功打卡交流群”的鄧ᶻᵘ">
+          <span class="mini-avatar">
+      
+        金
+      
+    </span>
+          <span class="member-name">金刚功打卡交流群”的鄧ᶻᵘ</span>
+          <span class="member-count">40</span>
         </button>
         
       </div>
@@ -792,18 +843,23 @@
         <p class="side-title">今日关键词</p>
         
         <a class="topic-mini" href="#topic-1">
-          <strong>今日话题 1: 练功体感</strong>
-          <span>练功反馈 · 8</span>
+          <strong>今日话题 1: 练功体感与健康改善</strong>
+          <span>练功反馈 · 15</span>
         </a>
         
         <a class="topic-mini" href="#topic-2">
-          <strong>今日话题 2: 打卡进展</strong>
-          <span>练功反馈 · 2</span>
+          <strong>今日话题 2: 练功与作息、饮食的配合</strong>
+          <span>方法讨论 · 10</span>
         </a>
         
         <a class="topic-mini" href="#topic-3">
-          <strong>今日话题 3: 问答交流</strong>
-          <span>问题答疑 · 4</span>
+          <strong>今日话题 3: 练功与心态、坚持的讨论</strong>
+          <span>群聊干货 · 8</span>
+        </a>
+        
+        <a class="topic-mini" href="#topic-4">
+          <strong>今日话题 4: 练功后身体反应答疑</strong>
+          <span>问题答疑 · 8</span>
         </a>
         
       </div>
@@ -815,18 +871,18 @@
         <div class="hero-content">
           <div class="hero-kicker">群聊日报 · 2026-05-11</div>
           <h2>金刚功打卡交流群</h2>
-          <p class="hero-subtitle">今天群里聊了什么、谁在输出、哪些资料值得捡起来，这份日报把消息流整理成可以回看的事件现场。</p>
+          <p class="hero-subtitle">今天重点围绕练功体感与健康改善、练功与作息、饮食的配合、练功与心态、坚持的讨论展开。核心结论：练功多套可改善局部不适，但失眠等深层问题需配合长寿功长期坚持；练功需配合规律作息和饮食，才能最大化效果。</p>
           <div class="metrics">
             <div class="metric">
-              <strong>66</strong>
+              <strong>232</strong>
               <span>总消息数</span>
             </div>
             <div class="metric">
-              <strong>8</strong>
+              <strong>20</strong>
               <span>活跃成员</span>
             </div>
             <div class="metric">
-              <strong>07:13 至 08:36</strong>
+              <strong>07:13 至 14:51</strong>
               <span>统计周期</span>
             </div>
           </div>
@@ -847,109 +903,89 @@
         
         <article class="event-card" id="topic-1">
           <header class="event-head">
-            <h4>今日话题 1: 练功体感</h4>
+            <h4>今日话题 1: 练功体感与健康改善</h4>
             <div class="tags">
               <span class="tag">练功反馈</span>
               
-              <span class="tag">练功</span>
+              <span class="tag">金刚功</span>
               
-              <span class="tag">长寿</span>
+              <span class="tag">长寿功</span>
               
-              <span class="tag">体感</span>
+              <span class="tag">失眠</span>
               
-              <span class="tag">发热</span>
+              <span class="tag">心脏</span>
               
             </div>
           </header>
           <div class="event-body">
-            <p class="summary">围绕“练功体感”共出现 8 条讨论，4 位成员参与，主要集中在 07:40 至 08:36。</p>
-            <p class="topic-meta">参与成员：4 · 时间段：07:40 - 08:36</p>
-            <div class="topic-brief">
-              <div class="topic-line">
-                <div class="topic-label">结论</div>
-                <p class="topic-text">你可能还是太硬了/长寿功你练了多久了</p>
-              </div>
-              <div class="topic-line">
-                <div class="topic-label">风险点</div>
-                <p class="topic-text">体感反馈差异较大，若忽视个体差异，容易造成错误预期。</p>
-              </div>
-              <div class="topic-line">
-                <div class="topic-label">明日行动</div>
-                <p class="topic-text">明天延续打卡并记录动作、时长和体感变化，晚上统一复盘。</p>
-              </div>
-            </div>
+            <p class="summary"><span class="name-pill tone-3">鄧ᶻᵘᴵⁱⁿ</span>反馈练金刚功多套后小腿胀感消失，心脏不适感减弱，但仍有失眠和嘴唇发紫问题。<span class="name-pill tone-2">阿文 Peter-Awen</span>建议练长寿功改善睡眠，<span class="name-pill tone-3">未央花明</span>补充长寿功最后一节通心肺。成员A坚持练功，认为效果虽慢但值得坚持。</p>
+            <p class="topic-meta">参与成员：5 · 时间段：07:13 - 08:46</p>
           </div>
         </article>
         
         <article class="event-card" id="topic-2">
           <header class="event-head">
-            <h4>今日话题 2: 打卡进展</h4>
+            <h4>今日话题 2: 练功与作息、饮食的配合</h4>
             <div class="tags">
-              <span class="tag">练功反馈</span>
+              <span class="tag">方法讨论</span>
               
-              <span class="tag">打卡</span>
+              <span class="tag">作息</span>
               
-              <span class="tag">继续</span>
+              <span class="tag">饮食</span>
               
-              <span class="tag">完成</span>
+              <span class="tag">中医</span>
               
-              <span class="tag">一套</span>
+              <span class="tag">耳鸣</span>
               
             </div>
           </header>
           <div class="event-body">
-            <p class="summary">围绕“打卡进展”共出现 2 条讨论，2 位成员参与，主要集中在 07:13 至 07:45。</p>
-            <p class="topic-meta">参与成员：2 · 时间段：07:13 - 07:45</p>
-            <div class="topic-brief">
-              <div class="topic-line">
-                <div class="topic-label">结论</div>
-                <p class="topic-text">三套不累吗/我有时间一天两套都累，还是分开练的</p>
-              </div>
-              <div class="topic-line">
-                <div class="topic-label">风险点</div>
-                <p class="topic-text">体感反馈差异较大，若忽视个体差异，容易造成错误预期。</p>
-              </div>
-              <div class="topic-line">
-                <div class="topic-label">明日行动</div>
-                <p class="topic-text">直接3套金7/想再整一套，时间不允许了</p>
-              </div>
-            </div>
+            <p class="summary">成员B强调天黑后不宜进食，类比练功逻辑。<span class="name-pill tone-3">孙秀伶</span>询问原因，成员B解释为顺应自然。<span class="name-pill tone-1">无名</span>建议<span class="name-pill tone-2">晓柳</span>调整作息改善耳鸣。成员B分享自己以金刚功为基础自学中医，认为医术为小道。</p>
+            <p class="topic-meta">参与成员：5 · 时间段：08:41 - 09:08</p>
           </div>
         </article>
         
         <article class="event-card" id="topic-3">
           <header class="event-head">
-            <h4>今日话题 3: 问答交流</h4>
+            <h4>今日话题 3: 练功与心态、坚持的讨论</h4>
             <div class="tags">
-              <span class="tag">问题答疑</span>
+              <span class="tag">群聊干货</span>
               
-              <span class="tag">怎么</span>
+              <span class="tag">坚持</span>
               
-              <span class="tag">为什么</span>
+              <span class="tag">心态</span>
               
-              <span class="tag">能不能</span>
+              <span class="tag">正面反馈</span>
               
-              <span class="tag">有没有</span>
+              <span class="tag">习惯</span>
               
             </div>
           </header>
           <div class="event-body">
-            <p class="summary">围绕“问答交流”共出现 4 条讨论，2 位成员参与，主要集中在 07:40 至 07:51。</p>
-            <p class="topic-meta">参与成员：2 · 时间段：07:40 - 07:51</p>
-            <div class="topic-brief">
-              <div class="topic-line">
-                <div class="topic-label">结论</div>
-                <p class="topic-text">有可能吧/我感觉我嘴皮颜色还是有点紫，估计体内有淤血或者心脏不好，看能不能练好/我体检有窦性心律不齐</p>
-              </div>
-              <div class="topic-line">
-                <div class="topic-label">风险点</div>
-                <p class="topic-text">有没有可能吃了黄精特别有劲</p>
-              </div>
-              <div class="topic-line">
-                <div class="topic-label">明日行动</div>
-                <p class="topic-text">把争议点整理成问题清单，明天逐条核对并补充依据。</p>
-              </div>
+            <p class="summary">成员B和成员A讨论练功需要正面反馈和习惯养成，<span class="name-pill tone-3">柿柿如意</span>强调情绪对健康影响占80%，练功需坚持不纠结效果。成员B分享自己死磕二十四式太极，追求美感与意境。</p>
+            <p class="topic-meta">参与成员：4 · 时间段：09:14 - 11:33</p>
+          </div>
+        </article>
+        
+        <article class="event-card" id="topic-4">
+          <header class="event-head">
+            <h4>今日话题 4: 练功后身体反应答疑</h4>
+            <div class="tags">
+              <span class="tag">问题答疑</span>
+              
+              <span class="tag">尿频</span>
+              
+              <span class="tag">下焦</span>
+              
+              <span class="tag">代谢</span>
+              
+              <span class="tag">焦虑</span>
+              
             </div>
+          </header>
+          <div class="event-body">
+            <p class="summary"><span class="name-pill tone-0">M先生</span>反馈练功后尿频，成员A认为是下焦通了，成员B建议不要焦虑，<span class="name-pill tone-0">甜</span>分享自己练功后代谢加快也有类似反应。<span class="name-pill tone-0">放眼望去</span>怀疑是急性尿道炎，但多数人认为是正常反应。</p>
+            <p class="topic-meta">参与成员：5 · 时间段：11:33 - 14:47</p>
           </div>
         </article>
         
@@ -960,8 +996,10 @@
       <section class="section" id="dialogues">
         <div class="section-heading">
           <h3>聊天现场</h3>
-          <p>用气泡还原当天最值得回看的对话。</p>
+          <p>把原始对话压缩成可执行的现场复盘结论。</p>
         </div>
+        
+        
         
         
         <article class="event-card filterable" data-members="阿文 Peter-Awen|金刚功打卡交流群”的鄧ᶻᵘ|阿文 Peter-Awen">
@@ -969,15 +1007,12 @@
             <h4>聊天现场回放</h4>
             <div class="tags">
               
-              <span class="tag">阿文 Peter-Awen</span>
-              
-              <span class="tag">金刚功打卡交流群”的鄧ᶻᵘ</span>
-              
-              <span class="tag">阿文 Peter-Awen</span>
               
             </div>
           </header>
           <div class="event-body">
+            
+            
             <div class="bubbles">
               
               <div class="bubble-row ">
@@ -1027,10 +1062,13 @@
               
             </div>
             
+            
             <div class="highlight">金句：这段对话值得回看，建议结合上下文再提炼成主题笔记。</div>
             
           </div>
         </article>
+        
+        
         
         
         <article class="event-card filterable" data-members="金刚功打卡交流群”的鄧ᶻᵘ|阿文 Peter-Awen|金刚功打卡交流群”的鄧ᶻᵘ|ಇ上上ജ签ഒᩚ|金刚功打卡交流群”的鄧ᶻᵘ|ಇ上上ജ签ഒᩚ">
@@ -1038,17 +1076,12 @@
             <h4>聊天现场回放</h4>
             <div class="tags">
               
-              <span class="tag">金刚功打卡交流群”的鄧ᶻᵘ</span>
-              
-              <span class="tag">阿文 Peter-Awen</span>
-              
-              <span class="tag">金刚功打卡交流群”的鄧ᶻᵘ</span>
-              
-              <span class="tag">ಇ上上ജ签ഒᩚ</span>
               
             </div>
           </header>
           <div class="event-body">
+            
+            
             <div class="bubbles">
               
               <div class="bubble-row ">
@@ -1143,10 +1176,13 @@
               
             </div>
             
+            
             <div class="highlight">金句：这段对话值得回看，建议结合上下文再提炼成主题笔记。</div>
             
           </div>
         </article>
+        
+        
         
         
         <article class="event-card filterable" data-members="未央花明|金刚功打卡交流群”的鄧ᶻᵘ|孙秀伶|金刚功打卡交流群”的鄧ᶻᵘ|孙秀伶">
@@ -1154,17 +1190,12 @@
             <h4>聊天现场回放</h4>
             <div class="tags">
               
-              <span class="tag">未央花明</span>
-              
-              <span class="tag">金刚功打卡交流群”的鄧ᶻᵘ</span>
-              
-              <span class="tag">孙秀伶</span>
-              
-              <span class="tag">金刚功打卡交流群”的鄧ᶻᵘ</span>
               
             </div>
           </header>
           <div class="event-body">
+            
+            
             <div class="bubbles">
               
               <div class="bubble-row ">
@@ -1244,6 +1275,7 @@
               
             </div>
             
+            
             <div class="highlight">金句：这段对话值得回看，建议结合上下文再提炼成主题笔记。</div>
             
           </div>
@@ -1267,6 +1299,34 @@
             <h4>你可能还是太硬了/长寿功你练了多久了？我记得你好像之前没怎么练过</h4>
             <p>你可能还是太硬了/长寿功你练了多久了？我记得你好像之前没怎么练过</p>
             <p style="margin-top: 10px;">阿文 Peter-Awen · 07:45</p>
+          </article>
+          
+          <article class="grid-card filterable" data-members="未知成员">
+            <span class="card-label">中</span>
+            <h4>[链接] "阿文 Peter-Awen" 拍了拍 "金刚功打卡交流群”的鄧ᶻᵘ" 的大肚皮！</h4>
+            <p>[链接] "阿文 Peter-Awen" 拍了拍 "金刚功打卡交流群”的鄧ᶻᵘ" 的大肚皮！</p>
+            <p style="margin-top: 10px;">未知成员 · 08:51</p>
+          </article>
+          
+          <article class="grid-card filterable" data-members="柿柿如意">
+            <span class="card-label">中</span>
+            <h4>[链接] 百分百是补不回来的，身体就像汽车，受伤以后只能是恢复到差不多位置，想恢复到巅峰是不可能</h4>
+            <p>[链接] 百分百是补不回来的，身体就像汽车，受伤以后只能是恢复到差不多位置，想恢复到巅峰是不可能的，所以我现在都是叫健康人认识养生的重要性，生病的人，性情不稳定，很容易就反咬一口</p>
+            <p style="margin-top: 10px;">柿柿如意 · 09:08</p>
+          </article>
+          
+          <article class="grid-card filterable" data-members="脆皮小师妹">
+            <span class="card-label">中</span>
+            <h4>[引用] 我现在就是闭着眼睛划拉，别人看上去就没以前标准了，但我觉得蛮舒服的[偷笑]而且练了就很</h4>
+            <p>[引用] 我现在就是闭着眼睛划拉，别人看上去就没以前标准了，但我觉得蛮舒服的[偷笑]而且练了就很好睡 ↳ 不过刚开始练，现在心里还在记手法，等到完全随心走了，不知会怎样</p>
+            <p style="margin-top: 10px;">脆皮小师妹 · 13:03</p>
+          </article>
+          
+          <article class="grid-card filterable" data-members="未知成员">
+            <span class="card-label">中</span>
+            <h4>[链接] "阿文 Peter-Awen" 拍了拍 "M先生"</h4>
+            <p>[链接] "阿文 Peter-Awen" 拍了拍 "M先生"</p>
+            <p style="margin-top: 10px;">未知成员 · 13:51</p>
           </article>
           
         </div>
@@ -1318,6 +1378,25 @@
           </div>
         </article>
         
+        <article class="qa-card filterable" data-members="金刚功打卡交流群”的鄧ᶻᵘ|孙秀伶">
+          <div class="qa-block">
+            <div class="qa-role">Question · 08:46</div>
+            <h4>金刚功打卡交流群”的鄧ᶻᵘ：@阿文 Peter-Awen 你练了长寿功后改变最大的是什么？</h4>
+            
+            <div class="pill-list">
+              
+              <span class="pill">群聊问答</span>
+              
+            </div>
+            
+          </div>
+          <div class="qa-block answer">
+            <div class="qa-role">Answer · 08:51 · Best</div>
+            <h4>孙秀伶</h4>
+            <p>坚持难，如果不是罕见病我也不练这功</p>
+          </div>
+        </article>
+        
       </section>
       
 
@@ -1329,6 +1408,31 @@
         
         <div class="rank-grid">
           
+          <article class="rank-card filterable" data-members="阿文 Peter-Awen">
+            <div class="rank-top">
+              <span class="avatar">
+      
+        阿
+      
+    </span>
+              <div style="min-width: 0;">
+                <div class="rank-index">#1</div>
+                <div class="rank-name">阿文 Peter-Awen</div>
+                <div class="rank-count">76 条消息</div>
+              </div>
+            </div>
+            
+            <div class="pill-list">
+              
+              <span class="pill">高频发言</span>
+              
+              <span class="pill">76 条消息</span>
+              
+            </div>
+            
+            
+          </article>
+          
           <article class="rank-card filterable" data-members="孙秀伶">
             <div class="rank-top">
               <span class="avatar">
@@ -1337,9 +1441,9 @@
       
     </span>
               <div style="min-width: 0;">
-                <div class="rank-index">#1</div>
+                <div class="rank-index">#2</div>
                 <div class="rank-name">孙秀伶</div>
-                <div class="rank-count">30 条消息</div>
+                <div class="rank-count">45 条消息</div>
               </div>
             </div>
             
@@ -1347,7 +1451,7 @@
               
               <span class="pill">高频发言</span>
               
-              <span class="pill">30 条消息</span>
+              <span class="pill">45 条消息</span>
               
             </div>
             
@@ -1362,34 +1466,9 @@
       
     </span>
               <div style="min-width: 0;">
-                <div class="rank-index">#2</div>
-                <div class="rank-name">金刚功打卡交流群”的鄧ᶻᵘ</div>
-                <div class="rank-count">16 条消息</div>
-              </div>
-            </div>
-            
-            <div class="pill-list">
-              
-              <span class="pill">高频发言</span>
-              
-              <span class="pill">16 条消息</span>
-              
-            </div>
-            
-            
-          </article>
-          
-          <article class="rank-card filterable" data-members="阿文 Peter-Awen">
-            <div class="rank-top">
-              <span class="avatar">
-      
-        阿
-      
-    </span>
-              <div style="min-width: 0;">
                 <div class="rank-index">#3</div>
-                <div class="rank-name">阿文 Peter-Awen</div>
-                <div class="rank-count">10 条消息</div>
+                <div class="rank-name">金刚功打卡交流群”的鄧ᶻᵘ</div>
+                <div class="rank-count">40 条消息</div>
               </div>
             </div>
             
@@ -1397,7 +1476,7 @@
               
               <span class="pill">高频发言</span>
               
-              <span class="pill">10 条消息</span>
+              <span class="pill">40 条消息</span>
               
             </div>
             
@@ -1421,262 +1500,262 @@
           <span
             class="word"
             style="left: 77%; top: 93px; color: #7a351f; font-size: 40px; --rotate: 10deg;"
-            title="3"
-          >呲牙</span>
+            title="21"
+          >引用</span>
           
           <span
             class="word"
             style="left: 23%; top: 228px; color: #415f8f; font-size: 30px; --rotate: 3deg;"
+            title="14"
+          >Peter-Awen</span>
+          
+          <span
+            class="word"
+            style="left: 69%; top: 49px; color: #287a5b; font-size: 25px; --rotate: -10deg;"
+            title="10"
+          >@阿文</span>
+          
+          <span
+            class="word"
+            style="left: 67%; top: 115px; color: #7a351f; font-size: 22px; --rotate: -5deg;"
+            title="8"
+          >憨笑</span>
+          
+          <span
+            class="word"
+            style="left: 21%; top: 230px; color: #d39b35; font-size: 20px; --rotate: -1deg;"
+            title="6"
+          >@🐉阿柳</span>
+          
+          <span
+            class="word"
+            style="left: 8%; top: 47px; color: #415f8f; font-size: 20px; --rotate: -4deg;"
+            title="6"
+          >抠鼻</span>
+          
+          <span
+            class="word"
+            style="left: 35%; top: 65px; color: #415f8f; font-size: 18px; --rotate: -8deg;"
+            title="5"
+          >呲牙</span>
+          
+          <span
+            class="word"
+            style="left: 16%; top: 106px; color: #d39b35; font-size: 17px; --rotate: -11deg;"
+            title="4"
+          >阿文</span>
+          
+          <span
+            class="word"
+            style="left: 27%; top: 253px; color: #b45f2a; font-size: 16px; --rotate: 0deg;"
+            title="3"
+          >@鄧ᶻᵘᴵⁱⁿ</span>
+          
+          <span
+            class="word"
+            style="left: 44%; top: 235px; color: #d39b35; font-size: 16px; --rotate: 8deg;"
+            title="3"
+          >捂脸</span>
+          
+          <span
+            class="word"
+            style="left: 81%; top: 90px; color: #8b5a86; font-size: 16px; --rotate: 9deg;"
+            title="3"
+          >系统</span>
+          
+          <span
+            class="word"
+            style="left: 66%; top: 83px; color: #8b5a86; font-size: 16px; --rotate: 2deg;"
+            title="3"
+          >撤回了一条消息</span>
+          
+          <span
+            class="word"
+            style="left: 11%; top: 173px; color: #d39b35; font-size: 16px; --rotate: -10deg;"
+            title="3"
+          >@M先生</span>
+          
+          <span
+            class="word"
+            style="left: 43%; top: 164px; color: #287a5b; font-size: 14px; --rotate: -11deg;"
             title="2"
           >我体检有窦性心律不齐</span>
           
           <span
             class="word"
-            style="left: 69%; top: 49px; color: #287a5b; font-size: 30px; --rotate: -10deg;"
-            title="2"
-          >引用</span>
-          
-          <span
-            class="word"
-            style="left: 67%; top: 115px; color: #7a351f; font-size: 30px; --rotate: -5deg;"
+            style="left: 53%; top: 53px; color: #8b5a86; font-size: 14px; --rotate: -4deg;"
             title="2"
           >鸡蛋不是不可以吃啊</span>
           
           <span
             class="word"
-            style="left: 21%; top: 230px; color: #d39b35; font-size: 30px; --rotate: -1deg;"
+            style="left: 79%; top: 90px; color: #d39b35; font-size: 14px; --rotate: 2deg;"
             title="2"
           >鸡蛋是少吃一点</span>
           
           <span
             class="word"
-            style="left: 8%; top: 47px; color: #415f8f; font-size: 30px; --rotate: -4deg;"
+            style="left: 70%; top: 199px; color: #287a5b; font-size: 14px; --rotate: -5deg;"
             title="2"
-          >捂脸</span>
+          >@孙</span>
           
           <span
             class="word"
-            style="left: 35%; top: 65px; color: #415f8f; font-size: 21px; --rotate: -8deg;"
-            title="1"
-          >直接3套金7</span>
+            style="left: 38%; top: 63px; color: #b45f2a; font-size: 14px; --rotate: -11deg;"
+            title="2"
+          >以前没有怎么练</span>
           
           <span
             class="word"
-            style="left: 16%; top: 106px; color: #d39b35; font-size: 21px; --rotate: -11deg;"
-            title="1"
-          >想再整一套</span>
+            style="left: 82%; top: 108px; color: #7a351f; font-size: 14px; --rotate: -7deg;"
+            title="2"
+          >最近十几天在坚持练了</span>
           
           <span
             class="word"
-            style="left: 27%; top: 253px; color: #b45f2a; font-size: 21px; --rotate: 0deg;"
-            title="1"
-          >时间不允许了</span>
+            style="left: 82%; top: 250px; color: #7a351f; font-size: 14px; --rotate: 8deg;"
+            title="2"
+          >你练了长寿功后改变最大的是什么</span>
           
           <span
             class="word"
-            style="left: 44%; top: 235px; color: #d39b35; font-size: 21px; --rotate: 8deg;"
-            title="1"
-          >连续干一个月</span>
+            style="left: 35%; top: 162px; color: #b45f2a; font-size: 14px; --rotate: 10deg;"
+            title="2"
+          >坚持难</span>
           
           <span
             class="word"
-            style="left: 81%; top: 90px; color: #8b5a86; font-size: 21px; --rotate: 9deg;"
-            title="1"
-          >看能不能治好失眠</span>
+            style="left: 83%; top: 164px; color: #8b5a86; font-size: 14px; --rotate: -5deg;"
+            title="2"
+          >如果不是罕见病我也不练这功</span>
           
           <span
             class="word"
-            style="left: 66%; top: 83px; color: #8b5a86; font-size: 21px; --rotate: 2deg;"
-            title="1"
-          >晚上老醒很恶心</span>
+            style="left: 11%; top: 232px; color: #7a351f; font-size: 14px; --rotate: 5deg;"
+            title="2"
+          >他们说耳鸣还是焦虑引起的</span>
           
           <span
             class="word"
-            style="left: 11%; top: 173px; color: #d39b35; font-size: 21px; --rotate: -10deg;"
-            title="1"
-          >那你得练长寿功</span>
+            style="left: 41%; top: 233px; color: #b45f2a; font-size: 14px; --rotate: -6deg;"
+            title="2"
+          >你练金刚功先虚一次吧</span>
           
           <span
             class="word"
-            style="left: 43%; top: 164px; color: #287a5b; font-size: 21px; --rotate: -11deg;"
-            title="1"
-          >晚上练一练长寿功</span>
+            style="left: 28%; top: 107px; color: #287a5b; font-size: 14px; --rotate: 2deg;"
+            title="2"
+          >虚一次你就不会想念那么多了</span>
           
           <span
             class="word"
-            style="left: 53%; top: 53px; color: #8b5a86; font-size: 21px; --rotate: -4deg;"
-            title="1"
-          >不想睡也得睡</span>
+            style="left: 79%; top: 200px; color: #b45f2a; font-size: 14px; --rotate: 2deg;"
+            title="2"
+          >黄精下次出个给群友的优惠价吧</span>
           
           <span
             class="word"
-            style="left: 79%; top: 90px; color: #d39b35; font-size: 21px; --rotate: 2deg;"
-            title="1"
-          >我晚上练了的啊</span>
+            style="left: 34%; top: 186px; color: #b45f2a; font-size: 14px; --rotate: 9deg;"
+            title="2"
+          >我不焦虑</span>
           
           <span
             class="word"
-            style="left: 70%; top: 199px; color: #287a5b; font-size: 21px; --rotate: -5deg;"
-            title="1"
-          >效果不明显</span>
+            style="left: 31%; top: 46px; color: #d39b35; font-size: 14px; --rotate: 6deg;"
+            title="2"
+          >我是有一天晚上非常生气</span>
           
           <span
             class="word"
-            style="left: 38%; top: 63px; color: #b45f2a; font-size: 21px; --rotate: -11deg;"
-            title="1"
-          >不知道咋回事</span>
+            style="left: 25%; top: 200px; color: #7a351f; font-size: 14px; --rotate: 1deg;"
+            title="2"
+          >第二天就感觉耳鸣严重了</span>
           
           <span
             class="word"
-            style="left: 82%; top: 108px; color: #7a351f; font-size: 21px; --rotate: -7deg;"
-            title="1"
-          >你可能还是太硬了</span>
+            style="left: 36%; top: 171px; color: #b45f2a; font-size: 14px; --rotate: -1deg;"
+            title="2"
+          >我耳鸣是扎针扎好的</span>
           
           <span
             class="word"
-            style="left: 82%; top: 250px; color: #7a351f; font-size: 21px; --rotate: 8deg;"
-            title="1"
-          >长寿功你练了多久了</span>
+            style="left: 69%; top: 112px; color: #415f8f; font-size: 14px; --rotate: -7deg;"
+            title="2"
+          >他说他最近想练多套</span>
           
           <span
             class="word"
-            style="left: 35%; top: 162px; color: #b45f2a; font-size: 21px; --rotate: 10deg;"
-            title="1"
-          >我记得你好像之前没怎么练过</span>
+            style="left: 63%; top: 197px; color: #8b5a86; font-size: 14px; --rotate: 8deg;"
+            title="2"
+          >要把自己练虚</span>
           
           <span
             class="word"
-            style="left: 83%; top: 164px; color: #8b5a86; font-size: 21px; --rotate: -5deg;"
-            title="1"
-          >练功没有柔软啊</span>
+            style="left: 77%; top: 141px; color: #287a5b; font-size: 14px; --rotate: -2deg;"
+            title="2"
+          >拍了拍</span>
           
           <span
             class="word"
-            style="left: 11%; top: 232px; color: #7a351f; font-size: 21px; --rotate: 5deg;"
-            title="1"
-          >没有多久</span>
+            style="left: 87%; top: 194px; color: #8b5a86; font-size: 14px; --rotate: 12deg;"
+            title="2"
+          >胳膊</span>
           
           <span
             class="word"
-            style="left: 41%; top: 233px; color: #b45f2a; font-size: 21px; --rotate: -6deg;"
-            title="1"
-          >估计十几天吧</span>
+            style="left: 47%; top: 54px; color: #287a5b; font-size: 14px; --rotate: 3deg;"
+            title="2"
+          >耳朵</span>
           
           <span
             class="word"
-            style="left: 28%; top: 107px; color: #287a5b; font-size: 21px; --rotate: 2deg;"
-            title="1"
-          >最近我忙的都没时间练功</span>
+            style="left: 52%; top: 170px; color: #d39b35; font-size: 14px; --rotate: 2deg;"
+            title="2"
+          >面部</span>
           
           <span
             class="word"
-            style="left: 79%; top: 200px; color: #b45f2a; font-size: 21px; --rotate: 2deg;"
-            title="1"
-          >三套不得一个小时了</span>
+            style="left: 56%; top: 69px; color: #b45f2a; font-size: 14px; --rotate: -11deg;"
+            title="2"
+          >脖子</span>
           
           <span
             class="word"
-            style="left: 34%; top: 186px; color: #b45f2a; font-size: 21px; --rotate: 9deg;"
-            title="1"
-          >我二十分钟都挤不出来</span>
+            style="left: 33%; top: 97px; color: #8b5a86; font-size: 14px; --rotate: -11deg;"
+            title="2"
+          >都有</span>
           
           <span
             class="word"
-            style="left: 31%; top: 46px; color: #d39b35; font-size: 21px; --rotate: 6deg;"
-            title="1"
-          >晚上累的直接倒头就睡</span>
+            style="left: 69%; top: 170px; color: #287a5b; font-size: 14px; --rotate: -1deg;"
+            title="2"
+          >扎针太受罪了</span>
           
           <span
             class="word"
-            style="left: 25%; top: 200px; color: #7a351f; font-size: 21px; --rotate: 1deg;"
-            title="1"
-          >金刚功练多套还是有点效果</span>
+            style="left: 59%; top: 148px; color: #8b5a86; font-size: 14px; --rotate: 12deg;"
+            title="2"
+          >嗷嗷叫</span>
           
           <span
             class="word"
-            style="left: 36%; top: 171px; color: #b45f2a; font-size: 21px; --rotate: -1deg;"
-            title="1"
-          >我前几天小腿比较胀</span>
+            style="left: 9%; top: 60px; color: #b45f2a; font-size: 14px; --rotate: -6deg;"
+            title="2"
+          >Lol</span>
           
           <span
             class="word"
-            style="left: 69%; top: 112px; color: #415f8f; font-size: 21px; --rotate: -7deg;"
-            title="1"
-          >这两天没有了</span>
-          
-          <span
-            class="word"
-            style="left: 63%; top: 197px; color: #8b5a86; font-size: 21px; --rotate: 8deg;"
-            title="1"
-          >当然也有可能是本来都胀了一段时间自然也应该消失了</span>
-          
-          <span
-            class="word"
-            style="left: 77%; top: 141px; color: #287a5b; font-size: 21px; --rotate: -2deg;"
-            title="1"
-          >@ಇ上上ജ签ഒᩚ</span>
-          
-          <span
-            class="word"
-            style="left: 87%; top: 194px; color: #8b5a86; font-size: 21px; --rotate: 12deg;"
-            title="1"
-          >我早上六点起来练到七点</span>
-          
-          <span
-            class="word"
-            style="left: 47%; top: 54px; color: #287a5b; font-size: 21px; --rotate: 3deg;"
-            title="1"
-          >三套不累吗</span>
-          
-          <span
-            class="word"
-            style="left: 52%; top: 170px; color: #d39b35; font-size: 21px; --rotate: 2deg;"
-            title="1"
-          >我有时间一天两套都累</span>
-          
-          <span
-            class="word"
-            style="left: 56%; top: 69px; color: #b45f2a; font-size: 21px; --rotate: -11deg;"
-            title="1"
-          >还是分开练的</span>
-          
-          <span
-            class="word"
-            style="left: 33%; top: 97px; color: #8b5a86; font-size: 21px; --rotate: -11deg;"
-            title="1"
-          >不累</span>
-          
-          <span
-            class="word"
-            style="left: 69%; top: 170px; color: #287a5b; font-size: 21px; --rotate: -1deg;"
-            title="1"
-          >我连续练四套都不累</span>
-          
-          <span
-            class="word"
-            style="left: 59%; top: 148px; color: #8b5a86; font-size: 21px; --rotate: 12deg;"
-            title="1"
-          >有没有可能吃了黄精特别有劲</span>
-          
-          <span
-            class="word"
-            style="left: 9%; top: 60px; color: #b45f2a; font-size: 21px; --rotate: -6deg;"
-            title="1"
-          >长寿功加至二至三套</span>
-          
-          <span
-            class="word"
-            style="left: 40%; top: 74px; color: #8b5a86; font-size: 21px; --rotate: 1deg;"
-            title="1"
-          >睡眠会好转</span>
+            style="left: 40%; top: 74px; color: #8b5a86; font-size: 14px; --rotate: 1deg;"
+            title="2"
+          >收工</span>
           
         </div>
       </section>
       
 
       <footer class="footer">
-        <p>Generated by WeChat Daily Report Skill · 2026-05-11 08:36:57</p>
-        <p>数据来源：金刚功打卡交流群聊天记录 · 2026-05-11 07:13 至 08:36</p>
+        <p>Generated by WeChat Daily Report Skill · 2026-05-11 14:52:04</p>
+        <p>数据来源：金刚功打卡交流群聊天记录 · 2026-05-11 07:13 至 14:51</p>
       </footer>
     </main>
   </div>
@@ -1686,6 +1765,65 @@
     const filterables = Array.from(document.querySelectorAll('.filterable'));
     const banner = document.getElementById('filterBanner');
     const filterText = document.getElementById('filterText');
+    const returnToIndex = document.getElementById('returnToIndex');
+
+    function resolveReturnUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const from = params.get('from');
+      if (from) {
+        try {
+          return decodeURIComponent(from);
+        } catch (error) {
+          return from;
+        }
+      }
+      if (document.referrer) {
+        return document.referrer;
+      }
+      return '';
+    }
+
+    const returnUrl = resolveReturnUrl();
+    if (returnToIndex) {
+      if (returnUrl) {
+        returnToIndex.href = returnUrl;
+      } else {
+        returnToIndex.addEventListener('click', event => {
+          event.preventDefault();
+          if (window.history.length > 1) {
+            window.history.back();
+          }
+        });
+      }
+    }
+
+    function toneClassForName(name) {
+      let score = 0;
+      for (const ch of name) score += ch.codePointAt(0) || 0;
+      return `tone-${score % 4}`;
+    }
+
+    function renderNamePill(name) {
+      const safeName = name
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+      return `<span class="name-pill ${toneClassForName(name)}">${safeName}</span>`;
+    }
+
+    function stylizeMemberRefs(element) {
+      if (!element) return;
+      const original = element.innerHTML;
+      const replaced = original.replace(/成员[A-Z0-9一二三四五六七八九十甲乙丙丁]+[（(]([^）)]+)[）)]/g, (_, name) => {
+        return renderNamePill(name.trim());
+      });
+      if (replaced !== original) {
+        element.innerHTML = replaced;
+      }
+    }
+
+    document.querySelectorAll('.summary, .topic-text, .highlight, .grid-card p, .qa-block h4, .qa-block p').forEach(stylizeMemberRefs);
 
     function setFilter(member) {
       chips.forEach(chip => chip.classList.toggle('active', chip.dataset.member === member));
