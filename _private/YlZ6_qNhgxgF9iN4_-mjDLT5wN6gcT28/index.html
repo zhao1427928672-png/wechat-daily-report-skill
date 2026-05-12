@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>胡子哥的咖啡坑 · 群日报 · 2026-05-12</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            apple: {
+              bg: '#fbfbfd',
+              surface: '#ffffff',
+              text: '#1d1d1f',
+              gray: '#86868b',
+              lightGray: '#f5f5f7',
+              darkBg: '#000000',
+              darkSurface: '#1c1c1e',
+              darkText: '#f5f5f7',
+              darkGray: '#86868b',
+              blue: '#0066cc'
+            },
+            morandi: {
+              red: '#b8837f',
+              blue: '#798897',
+              green: '#8f9d8c',
+              yellow: '#c2b198',
+              purple: '#958b96'
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'PingFang SC', 'Helvetica Neue', 'sans-serif'],
+          },
+          boxShadow: {
+            'apple': '0 4px 24px rgba(0, 0, 0, 0.04)',
+            'apple-hover': '0 8px 32px rgba(0, 0, 0, 0.08)',
+          }
+        }
+      }
+    };
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(143, 157, 140, 0.18), transparent 24%),
+        radial-gradient(circle at 88% 14%, rgba(194, 177, 152, 0.16), transparent 20%),
+        linear-gradient(180deg, #fbfbf8 0%, #f4f6f0 52%, #f8f7f3 100%);
+    }
+
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+
+    .name-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin: 0 4px 0 0;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.92em;
+      font-weight: 800;
+      vertical-align: baseline;
+      white-space: nowrap;
+    }
+
+    .name-pill.tone-0 { background: rgba(184, 131, 127, 0.16); color: #8f5b57; }
+    .name-pill.tone-1 { background: rgba(143, 157, 140, 0.18); color: #607060; }
+    .name-pill.tone-2 { background: rgba(121, 136, 151, 0.18); color: #607183; }
+    .name-pill.tone-3 { background: rgba(149, 139, 150, 0.18); color: #756b76; }
+  </style>
+</head>
+<body class="bg-apple-bg dark:bg-apple-darkBg text-apple-text dark:text-apple-darkText transition-colors duration-500 min-h-screen font-sans">
+  
+  
+  
+  
+
+  <nav class="fixed top-0 w-full z-50 bg-apple-bg/70 dark:bg-apple-darkBg/70 backdrop-blur-xl border-b border-black/5 dark:border-white/5 transition-colors duration-500">
+    <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+      <a id="returnToIndex" href="javascript:void(0)" class="text-xs md:text-sm font-semibold tracking-widest text-apple-gray hover:text-apple-text dark:hover:text-apple-darkText transition-colors flex items-center gap-1">
+        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        返回汇总页
+      </a>
+      <span class="text-xs font-semibold tracking-widest text-apple-gray">SUMMARY.AI</span>
+      <button onclick="toggleDarkMode()" class="text-apple-text dark:text-apple-darkText opacity-60 hover:opacity-100 transition-opacity">
+        <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+      </button>
+    </div>
+  </nav>
+
+  <main class="max-w-3xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-16 md:pb-24 space-y-24 md:space-y-32">
+    <section class="text-center reveal relative z-10">
+      <h2 class="text-xs md:text-sm font-semibold tracking-widest text-apple-gray uppercase mb-3 md:mb-4">Daily Report</h2>
+      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 md:mb-6">胡子哥的咖啡坑</h1>
+      <p class="text-base md:text-xl text-apple-gray font-medium max-w-xl mx-auto mb-10 md:mb-16">
+        统计时段：22:08 至 13:06
+      </p>
+      <div class="flex flex-wrap justify-center gap-8 md:gap-20">
+        <div>
+          <div class="text-6xl md:text-[8rem] leading-none font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-morandi-red to-morandi-purple inline-block mb-3 md:mb-6">
+            500
+          </div>
+          <div class="text-sm md:text-xl text-apple-gray font-semibold tracking-wide">条新消息</div>
+        </div>
+        <div>
+          <div class="text-6xl md:text-[8rem] leading-none font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-morandi-blue to-morandi-green inline-block mb-3 md:mb-6">
+            43
+          </div>
+          <div class="text-sm md:text-xl text-apple-gray font-semibold tracking-wide">人参与发言</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg">
+      <div class="pt-4 md:pt-8">
+        <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">一分钟速览。</h3>
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-6">
+          
+          <div class="md:col-span-4 bg-apple-lightGray dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-black/5 dark:border-white/5 flex flex-col justify-between min-h-[180px] md:min-h-[240px]">
+            <div>
+              <h4 class="text-xl md:text-2xl font-bold mb-2 md:mb-3 text-morandi-green">
+                显卡升级与游戏需求
+              </h4>
+            </div>
+            <p class="text-apple-gray text-base md:text-lg leading-relaxed font-medium">Jin分享从970升级到5060ti的经历，引发关于显卡性能过剩的讨论。群友认为高端显卡对多数游戏（如《大话西游》）性能过剩，核显即可满足。顾炎推荐二手RTX 3060 Ti，价格约2300元。讨论还涉及傲腾加速机械硬盘、游戏选择等。</p>
+          </div>
+          
+
+          
+          <div class="md:col-span-2 bg-apple-lightGray dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-black/5 dark:border-white/5 flex flex-col justify-between min-h-[180px] md:min-h-[240px]">
+            <div>
+              <h4 class="text-xl md:text-2xl font-bold mb-2 md:mb-3 text-morandi-blue">
+                618淘宝互点活动策略
+              </h4>
+            </div>
+            <p class="text-apple-gray text-base md:text-lg font-medium">群友大量互点淘宝链接以获取奖励，讨论多号策略和体力分配。空青建议先拿体力再跳，梦的第六夜认为一个号冲满级更划算。群友互相提醒点链接，氛围活跃。</p>
+          </div>
+          
+
+          <div class="md:col-span-6 bg-gradient-to-r from-apple-lightGray to-white dark:from-apple-darkSurface dark:to-[#2a2a2c] rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-black/5 dark:border-white/5 flex flex-col md:flex-row gap-4 md:gap-6 md:items-center justify-between">
+            <div class="flex-1">
+              <h4 class="text-xl md:text-2xl font-bold mb-2 md:mb-3 text-morandi-yellow">
+                
+                  咖啡机选购与预浸泡功能
+                
+              </h4>
+              <p class="text-apple-gray text-base md:text-lg font-medium">
+                
+                  胡子哥建议关闭低压预浸泡功能，认为对便宜振动泵机器有副作用。群友讨论旋转泵、变压变流咖啡机，涉及Decent、Hoyi、迈拓等品牌。子桓推荐Decent新机Bengle，张辰认为外观是短板。美味帝王谢考虑购买旋转泵机器。
+                
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal">
+      <div class="bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-14 shadow-apple transition-shadow duration-300 hover:shadow-apple-hover">
+        <div class="flex items-center gap-3 mb-6 md:mb-8">
+          <span class="w-2 h-2 rounded-full bg-morandi-purple"></span>
+          <span class="text-xs md:text-sm font-semibold tracking-wider text-morandi-purple uppercase">重要原声</span>
+        </div>
+        <blockquote class="text-xl md:text-3xl font-semibold leading-tight tracking-tight mb-6 md:mb-8 text-morandi-red">
+          “@hoyi机主（六折版）aka alo王 两个号 群聊的聊天记录”
+        </blockquote>
+        <div class="flex items-center gap-3 md:gap-4">
+          <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center text-xs md:text-sm font-bold">
+            梦
+          </div>
+          <div>
+            <div class="font-semibold text-sm md:text-base">梦的第六夜</div>
+            <div class="text-xs md:text-sm text-apple-gray">22:23</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg">
+      <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">具体话题。</h3>
+      <div class="relative pb-6 md:pb-12 space-y-4 md:space-y-6">
+        
+        <div class="bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 transition-transform duration-500">
+          <div class="flex justify-between items-start mb-6 md:mb-8 gap-4">
+            <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-green tracking-tight">
+              显卡升级与游戏需求
+            </h4>
+            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap">~30条</span>
+          </div>
+          <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium leading-relaxed">Jin分享从970升级到5060ti的经历，引发关于显卡性能过剩的讨论。群友认为高端显卡对多数游戏（如《大话西游》）性能过剩，核显即可满足。顾炎推荐二手RTX 3060 Ti，价格约2300元。讨论还涉及傲腾加速机械硬盘、游戏选择等。</p>
+          <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">问题答疑</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">8 人参与</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">22:08 - 22:18</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">显卡</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">5060ti</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">970</span>
+            
+          </div>
+        </div>
+        
+        <div class="bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 transition-transform duration-500">
+          <div class="flex justify-between items-start mb-6 md:mb-8 gap-4">
+            <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-blue tracking-tight">
+              618淘宝互点活动策略
+            </h4>
+            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap">~50条</span>
+          </div>
+          <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium leading-relaxed">群友大量互点淘宝链接以获取奖励，讨论多号策略和体力分配。空青建议先拿体力再跳，梦的第六夜认为一个号冲满级更划算。群友互相提醒点链接，氛围活跃。</p>
+          <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">群聊干货</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">15 人参与</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">22:23 - 13:06</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">618</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">互点</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">淘宝</span>
+            
+          </div>
+        </div>
+        
+        <div class="bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 transition-transform duration-500">
+          <div class="flex justify-between items-start mb-6 md:mb-8 gap-4">
+            <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-yellow tracking-tight">
+              咖啡机选购与预浸泡功能
+            </h4>
+            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap">~40条</span>
+          </div>
+          <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium leading-relaxed">胡子哥建议关闭低压预浸泡功能，认为对便宜振动泵机器有副作用。群友讨论旋转泵、变压变流咖啡机，涉及Decent、Hoyi、迈拓等品牌。子桓推荐Decent新机Bengle，张辰认为外观是短板。美味帝王谢考虑购买旋转泵机器。</p>
+          <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">方法讨论</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">10 人参与</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">11:35 - 12:16</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">咖啡机</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">预浸泡</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">旋转泵</span>
+            
+          </div>
+        </div>
+        
+        <div class="bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 transition-transform duration-500">
+          <div class="flex justify-between items-start mb-6 md:mb-8 gap-4">
+            <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-purple tracking-tight">
+              武大事件调侃
+            </h4>
+            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 md:px-4 md:py-2 rounded-full whitespace-nowrap">~10条</span>
+          </div>
+          <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium leading-relaxed">群友对武汉大学相关新闻进行调侃，小熊称“每次抓嫖在现场”，吹梦西洲称“每个技师都能溯源”。氛围轻松，无严肃讨论。</p>
+          <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">群聊干货</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">5 人参与</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">11:44 - 11:50</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">武大</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">调侃</span>
+            
+            <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">抓嫖</span>
+            
+          </div>
+        </div>
+        
+      </div>
+    </section>
+
+    
+    <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg pt-2 md:pt-6">
+      <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">经典金句。</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        
+        <div class="bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 transition-transform duration-300 hover:-translate-y-1 flex flex-col justify-between">
+          <div>
+            <div class="text-5xl md:text-6xl text-morandi-red/20 dark:text-morandi-red/40 font-serif leading-none mb-2 md:mb-4">"</div>
+            <p class="text-lg md:text-xl font-bold text-apple-text dark:text-apple-darkText mb-8 leading-relaxed">@hoyi机主（六折版）aka alo王 两个号 群聊的聊天记录</p>
+          </div>
+          <div class="flex items-center justify-between mt-auto pt-4 border-t border-black/5 dark:border-white/5">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-apple-lightGray dark:bg-white/10 flex items-center justify-center text-[10px] font-bold">梦</div>
+              <span class="text-sm font-semibold text-apple-gray">梦的第六夜</span>
+            </div>
+            <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">重点消息</span>
+          </div>
+        </div>
+        
+        <div class="bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 transition-transform duration-300 hover:-translate-y-1 flex flex-col justify-between">
+          <div>
+            <div class="text-5xl md:text-6xl text-morandi-blue/20 dark:text-morandi-blue/40 font-serif leading-none mb-2 md:mb-4">"</div>
+            <p class="text-lg md:text-xl font-bold text-apple-text dark:text-apple-darkText mb-8 leading-relaxed">中了 ↳ 群聊的聊天记录</p>
+          </div>
+          <div class="flex items-center justify-between mt-auto pt-4 border-t border-black/5 dark:border-white/5">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-apple-lightGray dark:bg-white/10 flex items-center justify-center text-[10px] font-bold">子</div>
+              <span class="text-sm font-semibold text-apple-gray">子桓</span>
+            </div>
+            <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">重点消息</span>
+          </div>
+        </div>
+        
+      </div>
+    </section>
+    
+
+    
+    <section class="reveal">
+      <div class="flex items-end justify-between mb-6 md:mb-8">
+        <h3 class="text-xl md:text-2xl font-bold">重要资源。</h3>
+        <span class="text-xs md:text-sm font-medium text-apple-gray bg-apple-lightGray dark:bg-white/10 px-3 py-1 rounded-full">共提取 8 份</span>
+      </div>
+      <div class="space-y-3 md:space-y-4">
+        
+        
+        <a href="https://m.tb.cn/h.RZLaUCl" target="_blank" rel="noopener noreferrer" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5">
+          <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RZLaUCl</h4>
+            <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+              <span class="truncate">子桓 分享</span>
+              <span>·</span>
+              <span class="whitespace-nowrap">链接</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </div>
+        </a>
+        
+        
+        
+        <a href="https://m.tb.cn/h.RZLYzb5" target="_blank" rel="noopener noreferrer" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5">
+          <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RZLYzb5</h4>
+            <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+              <span class="truncate">Crazydre 分享</span>
+              <span>·</span>
+              <span class="whitespace-nowrap">链接</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </div>
+        </a>
+        
+        
+        
+        <a href="https://m.tb.cn/h.RZL3WJi" target="_blank" rel="noopener noreferrer" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5">
+          <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RZL3WJi</h4>
+            <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+              <span class="truncate">钢丝 分享</span>
+              <span>·</span>
+              <span class="whitespace-nowrap">链接</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </div>
+        </a>
+        
+        
+        
+        <a href="https://m.tb.cn/h.RaQCpAn" target="_blank" rel="noopener noreferrer" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5">
+          <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RaQCpAn</h4>
+            <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+              <span class="truncate">学习使我 夜不能寐 扶墙而走 分享</span>
+              <span>·</span>
+              <span class="whitespace-nowrap">链接</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </div>
+        </a>
+        
+        
+        
+        <a href="https://m.tb.cn/h.RaQyRtW" target="_blank" rel="noopener noreferrer" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5">
+          <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RaQyRtW</h4>
+            <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+              <span class="truncate">学习使我 夜不能寐 扶墙而走 分享</span>
+              <span>·</span>
+              <span class="whitespace-nowrap">链接</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </div>
+        </a>
+        
+        
+        
+        <a href="https://m.tb.cn/h.RZLGUGr" target="_blank" rel="noopener noreferrer" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5">
+          <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RZLGUGr</h4>
+            <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+              <span class="truncate">Nirvana 分享</span>
+              <span>·</span>
+              <span class="whitespace-nowrap">链接</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </div>
+        </a>
+        
+        
+        
+        <a href="https://m.tb.cn/h.RaPBewm" target="_blank" rel="noopener noreferrer" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5">
+          <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RaPBewm</h4>
+            <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+              <span class="truncate">阿托利 分享</span>
+              <span>·</span>
+              <span class="whitespace-nowrap">链接</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </div>
+        </a>
+        
+        
+        
+        <a href="https://m.tb.cn/h.RZqlGbW" target="_blank" rel="noopener noreferrer" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5">
+          <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RZqlGbW</h4>
+            <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+              <span class="truncate">空青 分享</span>
+              <span>·</span>
+              <span class="whitespace-nowrap">链接</span>
+            </div>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </div>
+        </a>
+        
+        
+      </div>
+    </section>
+    
+
+    <section class="reveal border-t border-black/10 dark:border-white/10 pt-12 md:pt-16">
+      <div class="grid grid-cols-2 gap-4 md:gap-8 text-center">
+        <div>
+          <div class="text-3xl md:text-5xl font-bold tracking-tighter mb-1 md:mb-2">8</div>
+          <div class="text-sm md:text-lg font-semibold mb-1">文件或链接</div>
+          <div class="text-xs md:text-sm text-apple-gray">群内分享的资产</div>
+        </div>
+        <div>
+          <div class="text-3xl md:text-5xl font-bold tracking-tighter mb-1 md:mb-2 text-apple-gray/70 dark:text-apple-gray/80">3</div>
+          <div class="text-sm md:text-lg font-semibold mb-1">群聊问答</div>
+          <div class="text-xs md:text-sm text-apple-gray">本轮整理出的问答条目</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      const returnLink = document.getElementById('returnToIndex');
+      if (!returnLink) return;
+      const params = new URLSearchParams(window.location.search);
+      const from = params.get('from');
+
+      if (from) {
+        returnLink.href = from;
+      } else if (document.referrer && document.referrer !== window.location.href) {
+        returnLink.href = document.referrer;
+      } else {
+        returnLink.addEventListener('click', function(event) {
+          event.preventDefault();
+          if (window.history.length > 1) {
+            window.history.back();
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
