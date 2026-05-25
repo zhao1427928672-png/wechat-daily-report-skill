@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群聊日报</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        apple: {
+                            bg: '#fbfbfd',
+                            surface: '#ffffff',
+                            text: '#1d1d1f',
+                            gray: '#86868b',
+                            lightGray: '#f5f5f7',
+                            darkBg: '#000000',
+                            darkSurface: '#1c1c1e',
+                            darkText: '#c8c8cc',
+                            darkGray: '#86868b',
+                            blue: '#0066cc'
+                        },
+                        morandi: {
+                            red: '#b8837f',
+                            blue: '#798897',
+                            green: '#8f9d8c',
+                            yellow: '#c2b198',
+                            purple: '#958b96'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'Helvetica Neue', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'apple': '0 4px 24px rgba(0, 0, 0, 0.04)',
+                        'apple-hover': '0 8px 32px rgba(0, 0, 0, 0.08)',
+                    }
+                }
+            }
+        }
+
+        let globalObserver;
+        // 当前显示的群 ID
+        let currentGroupId = null;
+
+        // 自动跟随系统暗色模式
+        function applySystemDarkMode() {
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+        applySystemDarkMode();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySystemDarkMode);
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function toggleSummary(btn) {
+            var container = btn.parentElement && btn.parentElement.parentElement;
+            var text = container ? container.querySelector('.summary-text') : null;
+            if (!text) return;
+
+            var expanded = text.classList.contains('expanded');
+            text.classList.toggle('expanded', !expanded);
+            container.classList.toggle('expanded', !expanded);
+            btn.textContent = expanded ? '展开' : '收起';
+        }
+
+        function openAiSheet(btn) {
+            var container = btn.parentElement && btn.parentElement.parentElement;
+            if (!container) return;
+            var label = container.querySelector('.ai-mini-label');
+            var source = container.querySelector('.ai-sheet-source');
+            var overlay = document.getElementById('ai-sheet-overlay');
+            var title = document.getElementById('ai-sheet-title');
+            var body = document.getElementById('ai-sheet-body');
+            if (!source || !overlay || !title || !body) return;
+
+            title.textContent = label ? label.textContent : 'AI补充';
+            body.innerHTML = source.innerHTML;
+            overlay.classList.add('open');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeAiSheet() {
+            var overlay = document.getElementById('ai-sheet-overlay');
+            var body = document.getElementById('ai-sheet-body');
+            if (!overlay || !body) return;
+            overlay.classList.remove('open');
+            body.innerHTML = '';
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // 显示某个群的详情页
+        function showDetail(groupId) {
+            // 隐藏汇总页
+            document.getElementById('summary-view').classList.add('hidden');
+
+            // 隐藏所有详情页
+            document.querySelectorAll('.detail-view-item').forEach(function(el) {
+                el.classList.add('hidden');
+            });
+
+            // 显示目标群详情
+            var target = document.getElementById('detail-' + groupId);
+            if (target) {
+                target.classList.remove('hidden');
+            }
+
+            // 导航栏切换
+            document.getElementById('nav-logo').classList.add('hidden');
+            document.getElementById('nav-back-btn').classList.remove('hidden');
+
+            currentGroupId = groupId;
+            window.scrollTo(0, 0);
+            if (target) resetAnimations(target);
+        }
+
+        // 返回汇总页
+        function showSummary() {
+            // 隐藏所有详情页
+            document.querySelectorAll('.detail-view-item').forEach(function(el) {
+                el.classList.add('hidden');
+            });
+
+            // 显示汇总页
+            document.getElementById('summary-view').classList.remove('hidden');
+
+            // 导航栏切换
+            document.getElementById('nav-back-btn').classList.add('hidden');
+            document.getElementById('nav-logo').classList.remove('hidden');
+
+            currentGroupId = null;
+            window.scrollTo(0, 0);
+            resetAnimations(document.getElementById('summary-view'));
+        }
+
+        // 动画重置
+        function resetAnimations(container) {
+            if (!container) return;
+            container.querySelectorAll('.reveal').forEach(function(el) {
+                el.classList.remove('reveal-active');
+                if (globalObserver) globalObserver.observe(el);
+            });
+            window.dispatchEvent(new Event('scroll'));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15
+            };
+
+            globalObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('reveal-active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            resetAnimations(document.getElementById('summary-view'));
+
+            // #1 #3 计数动画
+            function animateCounters() {
+                document.querySelectorAll('[data-count]').forEach(function(el) {
+                    var target = parseInt(el.getAttribute('data-count'), 10);
+                    if (isNaN(target)) return;
+                    var duration = 1200;
+                    var start = 0;
+                    var startTime = null;
+                    function step(timestamp) {
+                        if (!startTime) startTime = timestamp;
+                        var progress = Math.min((timestamp - startTime) / duration, 1);
+                        var eased = 1 - Math.pow(1 - progress, 3);
+                        var current = Math.floor(eased * target);
+                        el.textContent = current.toLocaleString();
+                        if (progress < 1) requestAnimationFrame(step);
+                        else el.textContent = target.toLocaleString();
+                    }
+                    requestAnimationFrame(step);
+                });
+            }
+            // 延迟触发计数动画
+            setTimeout(animateCounters, 600);
+
+            // #8 移动端手势滑动切换群
+            var touchStartX = 0;
+            var touchEndX = 0;
+            var groupIds = [];
+            document.querySelectorAll('.detail-view-item').forEach(function(el) {
+                groupIds.push(el.id.replace('detail-', ''));
+            });
+
+            document.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            document.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                var diff = touchStartX - touchEndX;
+                if (Math.abs(diff) < 80) return; // 滑动距离太短忽略
+                if (!currentGroupId) return; // 不在详情页
+
+                var currentIdx = groupIds.indexOf(currentGroupId);
+                if (currentIdx < 0) return;
+
+                if (diff > 0 && currentIdx < groupIds.length - 1) {
+                    // 左滑 → 下一群
+                    showDetail(groupIds[currentIdx + 1]);
+                } else if (diff < 0 && currentIdx > 0) {
+                    // 右滑 → 上一群
+                    showDetail(groupIds[currentIdx - 1]);
+                } else if (diff < 0 && currentIdx === 0) {
+                    // 第一个群右滑 → 返回汇总
+                    showSummary();
+                }
+            }, { passive: true });
+
+            // 视差滚动
+            var lastScrollY = 0;
+            window.addEventListener('scroll', function() {
+                var scrolled = window.scrollY;
+                document.querySelectorAll('.hero-parallax').forEach(function(el) {
+                    if (!el.closest('.hidden')) {
+                        el.style.transform = 'translateY(' + (scrolled * 0.3) + 'px)';
+                        el.style.opacity = 1 - (scrolled * 0.002);
+                    }
+                });
+                // 导航栏：往下滑隐藏，往上滑显示
+                var nav = document.getElementById('main-nav');
+                if (scrolled > 80 && scrolled > lastScrollY) {
+                    nav.style.transform = 'translateY(-100%)';
+                } else {
+                    nav.style.transform = 'translateY(0)';
+                }
+                // 导航栏滚动阴影
+                if (scrolled > 10) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+                lastScrollY = scrolled;
+            });
+        });
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal-active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+
+        .bento-card {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bento-card:hover {
+            transform: scale(1.02);
+        }
+
+        /* 群卡片 hover 上浮 */
+        .group-card {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        }
+        .group-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+        }
+        .group-card:active {
+            transform: translateY(-1px);
+        }
+
+        /* 数字渐变动画 */
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .hero-parallax .inline-block {
+            background-size: 200% 200%;
+            animation: gradient-shift 4s ease infinite;
+        }
+
+        /* 导航栏滚动时加阴影 */
+        nav.scrolled {
+            box-shadow: 0 1px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        /* #2 群卡片入场瀑布流延迟 */
+        .group-card:nth-child(1) { transition-delay: 0ms; }
+        .group-card:nth-child(2) { transition-delay: 80ms; }
+        .group-card:nth-child(3) { transition-delay: 160ms; }
+        .group-card:nth-child(4) { transition-delay: 240ms; }
+        .group-card:nth-child(5) { transition-delay: 320ms; }
+
+        /* #4 页面切换过渡 */
+        .detail-view-item {
+            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* #5 资源卡片外链图标旋转 */
+        .group:hover .link-icon {
+            transform: rotate(45deg);
+        }
+        .link-icon {
+            transition: transform 0.3s ease;
+        }
+
+        /* #6 底部分隔线展开动画 */
+        .divider-animate {
+            transform: scaleX(0);
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: center;
+        }
+        .reveal-active .divider-animate {
+            transform: scaleX(1);
+        }
+
+        /* #7 页面加载进度条 */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #b8837f, #798897, #8f9d8c, #c2b198, #958b96);
+            background-size: 200% 100%;
+            animation: loader-gradient 1.5s ease infinite, loader-width 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            z-index: 9999;
+        }
+        @keyframes loader-gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        @keyframes loader-width {
+            from { width: 0%; }
+            to { width: 100%; opacity: 0; }
+        }
+
+        /* #8 群卡片左侧莫兰迪色竖线 */
+        .card-accent {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        /* #9 暗色模式过渡 */
+        html {
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* 夜间模式：只把最黑的正文字体（#1d1d1f）改成柔和灰白，彩色字体不变 */
+        .dark .text-apple-darkText,
+        .dark [class*="dark\\:text-apple-darkText"] {
+            color: #c8c8cc !important;
+        }
+        .dark body {
+            color: #c8c8cc;
+        }
+        /* Tailwind 的 dark:text-apple-darkText 在 .dark 作用域下的覆盖 */
+        html.dark .dark\:text-apple-darkText {
+            color: #c8c8cc !important;
+        }
+
+        /* #10 引号浮动动画 */
+        @keyframes float-quote {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .quote-mark {
+            animation: float-quote 3s ease-in-out infinite;
+            display: inline-block;
+        }
+        /* #17 中英文混排优化 - 只对话题摘要区块生效，不影响金句居中 */
+        .topic-summary, section p:not([style]) {
+            text-align: justify;
+            text-align-last: left;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        p[style*="center"] {
+            text-align: center !important;
+            text-align-last: center !important;
+        }
+
+        /* 卡片内容防溢出 */
+        .sticky {
+            overflow: hidden;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .sticky h4, .sticky p, .sticky span {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .name-tag {
+            word-break: keep-all;
+        }
+
+        .ai-mini-card {
+            margin-top: 14px;
+            margin-bottom: 14px;
+            padding: 8px 10px;
+            border-radius: 14px;
+            background: rgba(134, 134, 139, 0.035);
+            border: 1px solid rgba(134, 134, 139, 0.08);
+            transition: padding 0.25s ease, border-radius 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+        }
+        .ai-mini-card.expanded {
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(134, 134, 139, 0.05);
+            border: 1px solid rgba(134, 134, 139, 0.10);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+            transform: translateY(-1px);
+        }
+        .ai-mini-header {
+            min-height: 24px;
+        }
+        .ai-mini-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: rgba(134, 134, 139, 0.78);
+            letter-spacing: 0.02em;
+        }
+        .expand-btn {
+            cursor: pointer;
+            color: rgba(134, 134, 139, 0.78);
+            font-size: 0.68rem;
+            font-weight: 600;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: fit-content;
+            min-height: 20px;
+            padding: 0 6px;
+            border-radius: 9999px;
+            background: transparent;
+            border: 1px solid rgba(134, 134, 139, 0.12);
+            transition: all 0.2s;
+        }
+        .expand-btn:hover {
+            color: #6e6e73;
+            border-color: rgba(134, 134, 139, 0.20);
+            background: rgba(134, 134, 139, 0.025);
+        }
+        .dark .expand-btn {
+            color: #c8c8cc;
+            border-color: rgba(255, 255, 255, 0.10);
+        }
+        .dark .expand-btn:hover {
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .dark .ai-mini-card {
+            background: rgba(255, 255, 255, 0.028);
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+        .dark .ai-mini-card.expanded {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+        }
+        .summary-text {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            transform: translateY(-2px);
+            margin-top: 0;
+            transition: grid-template-rows 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease, transform 0.24s ease, margin-top 0.24s ease;
+        }
+        .summary-text.expanded {
+            grid-template-rows: 1fr;
+            opacity: 1;
+            transform: translateY(0);
+            margin-top: 8px;
+        }
+        .summary-text-inner {
+            min-height: 0;
+            overflow: hidden;
+        }
+        .ai-sheet-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.18);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .ai-sheet-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .ai-sheet-panel {
+            width: min(720px, 100%);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid rgba(255, 255, 255, 0.40);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
+            backdrop-filter: blur(22px) saturate(150%);
+            -webkit-backdrop-filter: blur(22px) saturate(150%);
+            padding: 16px 16px 20px;
+            transform: translateY(22px) scale(0.94);
+            filter: blur(10px);
+            opacity: 0;
+            transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, filter 0.38s ease;
+        }
+        .ai-sheet-overlay.open .ai-sheet-panel {
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+            opacity: 1;
+        }
+        .ai-sheet-body {
+            max-height: min(52vh, 420px);
+            overflow-y: auto;
+            margin-top: 12px;
+            color: #6e6e73;
+            font-size: 0.95rem;
+            line-height: 1.75;
+        }
+        .dark .ai-sheet-panel {
+            background: rgba(28, 28, 30, 0.58);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        }
+        .dark .ai-sheet-body {
+            color: #c8c8cc;
+        }
+        .ai-sheet-topbar,
+        .ai-sheet-body {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .ai-sheet-overlay.open .ai-sheet-topbar,
+        .ai-sheet-overlay.open .ai-sheet-body {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .ai-sheet-body {
+            transition-delay: 60ms;
+        }
+        .dark .ai-mini-label {
+            color: rgba(199, 199, 204, 0.72);
+        }
+        /* 人名标签样式 - 字体小、卡片主题色、无背景 */
+        .name-tag {
+            display: inline;
+            padding: 0;
+            margin: 0 1px;
+            border-radius: 0;
+            background-color: transparent !important;
+            font-weight: 600;
+            font-size: 0.82em;
+            word-break: break-all;
+        }
+        .dark .name-tag {
+            opacity: 0.85;
+        }
+
+        /* 说话内容标签 - 无背景，颜色跟人名统一 */
+        .speech-tag {
+            display: inline;
+            padding: 0;
+            margin: 0;
+            border-radius: 0;
+            background-color: transparent !important;
+        }
+
+        /* 具体话题里的说话内容加背景色 */
+        .topic-summary {
+            background-color: transparent;
+            border-radius: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body class="bg-apple-bg dark:bg-apple-darkBg text-apple-text dark:text-apple-darkText transition-colors duration-500 min-h-screen">
+
+    <!-- #7 页面加载进度条 -->
+    <div class="page-loader"></div>
+
+    <!-- 顶部导航 -->
+    <nav class="fixed top-0 w-full z-50 bg-apple-bg/70 dark:bg-apple-darkBg/70 backdrop-blur-xl border-b border-black/5 dark:border-white/5 transition-all duration-300" id="main-nav">
+        <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+            <button id="nav-back-btn" onclick="showSummary()" class="hidden text-xs md:text-sm font-semibold tracking-widest text-apple-gray hover:text-apple-text dark:hover:text-apple-darkText transition-colors flex items-center gap-1">
+                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                返回概览
+            </button>
+            <span id="nav-logo" class="text-xs font-semibold tracking-widest text-apple-gray">DAILY REPORT</span>
+            <button onclick="toggleDarkMode()" class="text-apple-text dark:text-apple-darkText opacity-60 hover:opacity-100 transition-opacity">
+                <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================= 汇总视图 ================= -->
+    <div id="summary-view" class="max-w-4xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-16 md:pb-24 space-y-16 md:space-y-24">
+
+        <!-- 顶部 Header -->
+        <section class="reveal">
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
+                午安。
+            </h1>
+            
+            <p class="text-lg md:text-xl text-morandi-blue dark:text-morandi-blue font-semibold max-w-2xl leading-relaxed mb-4 md:mb-6">
+                今日各群：练功体感、健康调理与婚恋话题交织，氛围轻松；讨论功法被篡改事件，强调心正为传法根本；群内热议S5评测、C40发货、咖啡机选购及618优惠。
+            </p>
+            
+            <p class="text-xl md:text-2xl text-apple-gray font-medium max-w-2xl leading-relaxed mb-12 md:mb-16">
+                过去一段时间，已处理
+                <span class="text-apple-text dark:text-apple-darkText font-bold">3</span>
+                个活跃群组，共
+                <span class="text-apple-text dark:text-apple-darkText font-bold">1,682</span>
+                条消息。
+            </p>
+
+            <!-- 全局统计 -->
+            <div class="flex flex-wrap justify-center md:justify-start gap-10 md:gap-20">
+                <div class="text-center md:text-left">
+                    <div class="text-xs md:text-sm font-semibold text-apple-gray uppercase tracking-widest mb-2 md:mb-3">群数量</div>
+                    <div class="text-5xl md:text-6xl font-bold tracking-tight text-morandi-blue" data-count="3">0</div>
+                </div>
+                <div class="text-center md:text-left">
+                    <div class="text-xs md:text-sm font-semibold text-apple-gray uppercase tracking-widest mb-2 md:mb-3">消息总数</div>
+                    <div class="text-5xl md:text-6xl font-bold tracking-tight text-morandi-red" data-count="1682">0</div>
+                </div>
+                <div class="text-center md:text-left">
+                    <div class="text-xs md:text-sm font-semibold text-apple-gray uppercase tracking-widest mb-2 md:mb-3">总发言人数</div>
+                    <div class="text-5xl md:text-6xl font-bold tracking-tight text-morandi-yellow" data-count="66">0</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 群卡片列表 -->
+        <section class="reveal delay-100 flex flex-col gap-4 md:gap-6">
+            
+            <div onclick="showDetail('group1')" class="cursor-pointer bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] p-8 md:p-10 shadow-apple hover:shadow-apple-hover border border-black/5 dark:border-white/5 transition-all duration-300 flex flex-col md:flex-row gap-6 md:items-center group-card relative">
+                <div class="flex-1">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-y-1.5 gap-x-3 mb-3 md:mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-morandi-red animate-pulse"></div>
+                            <span class="text-sm font-semibold text-morandi-red">896 条新消息</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-apple-gray text-xs md:text-sm font-medium">
+                            <span class="hidden md:inline">·</span>
+                            <span>28 人发言</span>
+                            <span>·</span>
+                            <span>5月24日 06:20 → 5月25日 11:35</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-bold tracking-tight mb-2 md:mb-3 group-card-title text-morandi-red-hover">金刚功打卡交流群</h3>
+                    <p class="text-base md:text-lg text-apple-gray font-medium">群友热议练功体感、肾虚调理、瘦身过快及婚恋话题，氛围轻松。</p>
+                </div>
+                <div class="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-apple-lightGray dark:bg-white/5 text-apple-gray flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div onclick="showDetail('group2')" class="cursor-pointer bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] p-8 md:p-10 shadow-apple hover:shadow-apple-hover border border-black/5 dark:border-white/5 transition-all duration-300 flex flex-col md:flex-row gap-6 md:items-center group-card relative">
+                <div class="flex-1">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-y-1.5 gap-x-3 mb-3 md:mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-morandi-blue "></div>
+                            <span class="text-sm font-semibold text-morandi-blue">14 条新消息</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-apple-gray text-xs md:text-sm font-medium">
+                            <span class="hidden md:inline">·</span>
+                            <span>5 人发言</span>
+                            <span>·</span>
+                            <span>5月24日 05:48 → 5月25日 09:44</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-bold tracking-tight mb-2 md:mb-3 group-card-title text-morandi-blue-hover">雷家山金刚长寿功来观群8</h3>
+                    <p class="text-base md:text-lg text-apple-gray font-medium">群友讨论功法被篡改及心术不正的危害，强调心正为要。</p>
+                </div>
+                <div class="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-apple-lightGray dark:bg-white/5 text-apple-gray flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div onclick="showDetail('group3')" class="cursor-pointer bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] p-8 md:p-10 shadow-apple hover:shadow-apple-hover border border-black/5 dark:border-white/5 transition-all duration-300 flex flex-col md:flex-row gap-6 md:items-center group-card relative">
+                <div class="flex-1">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-y-1.5 gap-x-3 mb-3 md:mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-morandi-green animate-pulse"></div>
+                            <span class="text-sm font-semibold text-morandi-green">772 条新消息</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-apple-gray text-xs md:text-sm font-medium">
+                            <span class="hidden md:inline">·</span>
+                            <span>34 人发言</span>
+                            <span>·</span>
+                            <span>5月24日 00:00 → 5月25日 11:49</span>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-bold tracking-tight mb-2 md:mb-3 group-card-title text-morandi-green-hover">胡子哥的咖啡坑</h3>
+                    <p class="text-base md:text-lg text-apple-gray font-medium">群内热议手磨S5评测、C40发货、半自动咖啡机选购及618优惠</p>
+                </div>
+                <div class="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-apple-lightGray dark:bg-white/5 text-apple-gray flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </div>
+            </div>
+            
+        </section>
+
+    </div>
+    <!-- ================= 汇总视图结束 ================= -->
+
+    <!-- 生成时间 -->
+    <div id="summary-view-footer" class="max-w-4xl mx-auto px-4 md:px-6 pb-8 text-center">
+        <p class="text-xs text-apple-gray/60 text-center">生成于 2026-05-25 16:32:19</p>
+    </div>
+
+    <!-- ================= 各群详情视图（单文件内嵌，方案A） ================= -->
+    
+    <main id="detail-group1" class="detail-view-item hidden max-w-3xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-16 md:pb-24 space-y-24 md:space-y-32">
+
+        <!-- Hero -->
+        <section class="text-center reveal relative z-10">
+            <h2 class="text-xs md:text-sm font-semibold tracking-widest text-apple-gray uppercase mb-3 md:mb-4">Daily Report</h2>
+            <h1 class="font-extrabold tracking-tight mb-4 md:mb-6 text-4xl md:text-6xl">
+                金刚功打卡交流群
+            </h1>
+            <p class="text-base md:text-xl text-apple-gray font-medium max-w-xl mx-auto mb-10 md:mb-16" style="text-align:center">
+                统计时段：5月24日 06:20 → 5月25日 11:35
+            </p>
+            <div class="hero-parallax flex flex-wrap justify-center gap-8 md:gap-20">
+                <div>
+                    <div class="text-6xl md:text-[8rem] leading-none font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-morandi-red to-morandi-purple inline-block mb-3 md:mb-6">
+                        896
+                    </div>
+                    <div class="text-sm md:text-xl text-apple-gray font-semibold tracking-wide">条新消息</div>
+                </div>
+                <div>
+                    <div class="text-6xl md:text-[8rem] leading-none font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-morandi-red to-morandi-green inline-block mb-3 md:mb-6">
+                        28
+                    </div>
+                    <div class="text-sm md:text-xl text-apple-gray font-semibold tracking-wide">人参与发言</div>
+                </div>
+            </div>
+            
+            <div class="mt-10 md:mt-14 flex justify-center">
+                <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-apple-lightGray dark:bg-white/10 border border-black/5 dark:border-white/10">
+                    <span class="text-sm font-semibold text-apple-gray">今日氛围：轻松</span>
+                    
+                    <span class="text-sm text-apple-gray/70 hidden md:inline">· 群友积极分享练功体感和生活感悟，氛围活跃而轻松。</span>
+                    
+                </div>
+            </div>
+            
+        </section>
+
+        <!-- ===== 重要精华（sticky 重叠卡片，标题颜色轮转） ===== -->
+        
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg">
+            <div class="pt-4 md:pt-8">
+                <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">重要精华。</h3>
+                <div class="relative pb-6 md:pb-12">
+                    
+                    
+                    
+                    <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-red mb-3 md:mb-4">练功体感与健康讨论</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed">多位群友分享练功后身体反应，如腿软、出汗、瘦身过快等，讨论肾虚、肾积水、心律不齐等健康问题，并交流调理方法。</p>
+                    </div>
+                    
+                    
+                    <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-blue mb-3 md:mb-4">瘦身过快引发关注</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed"><span class="name-tag" style="color:#798897;">白月光</span><span class="speech-tag"> 表示练功三四个月瘦了十几斤，出现贫血、免疫力下降，群友建议多练长寿功以平衡。</span></p>
+                    </div>
+                    
+                    
+                    <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-yellow mb-3 md:mb-4">婚恋话题热烈讨论</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed"><span class="speech-tag">从相亲、骗婚到星座性格，群友分享个人经历和观点，</span><span class="name-tag" style="color:#a78f6b;">阿文 Peter-Awen</span><span class="speech-tag"> 提出“能量足才敢言爱”。</span></p>
+                    </div>
+                    
+                    
+                    <div class="sticky top-16 z-40 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-red mb-3 md:mb-4">饮食与养生方法交流</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed"><span class="speech-tag">讨论荔枝皮煮水去火、米汤补津液、五黑粉消化问题等，</span><span class="name-tag" style="color:#b8837f;">炁</span><span class="speech-tag"> 推荐猪肤汤滋阴。</span></p>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+        
+
+        <!-- ===== 具体话题（sticky 卡片列表，标题颜色轮转） ===== -->
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg">
+            <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">具体话题。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-red tracking-tight">练功体感与健康调理</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~15条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 258 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary"><span class="name-tag" style="color:#b8837f;">鄧ᶻᵘᴵⁱⁿ</span><span class="speech-tag"> 反馈练功后腿软、脚胀，感觉有堵点，</span><span class="name-tag" style="color:#b8837f;">天使</span><span class="speech-tag"> 则出汗粘糊。群友认为这是身体排寒或气血消耗的表现，建议结合黄精、滋阴药调理。</span><span class="name-tag" style="color:#b8837f;">阿文 Peter-Awen</span><span class="speech-tag"> 强调动则生阳，但需注意能量平衡。</span><span class="name-tag" style="color:#b8837f;">白月光</span><span class="speech-tag"> 因瘦身过快导致贫血，群友建议多练长寿功以增肉。讨论还涉及肾虚、肾积水、心律不齐等，</span><span class="name-tag" style="color:#b8837f;">未央花明</span><span class="speech-tag"> 分享练功后腰疼改善。共识是练功需循序渐进，配合饮食和休息。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">练功后腿软、脚胀或异常出汗，可能与交感神经过度兴奋或肌肉微循环调节失衡有关，而非单纯“排寒”。建议关注练功时的呼吸节奏，深长缓呼可促进副交感激活，改善局部循环。若伴随心律不齐，需排查胸椎小关节紊乱可能，它可能压迫交感神经链，建议结合脊柱触诊评估。黄精调理时，可搭配少量桂枝（3-5g）引药上行，避免滋腻碍胃，同时监测晨起静息心率，若持续＞80次/分，需调整功法强度。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">练功后腿软、脚胀或异常出汗，可能与交感神经过度兴奋或肌肉微循环调节失衡有关，而非单纯“排寒”。建议关注练功时的呼吸节奏，深长缓呼可促进副交感激活，改善局部循环。若伴随心律不齐，需排查胸椎小关节紊乱可能，它可能压迫交感神经链，建议结合脊柱触诊评估。黄精调理时，可搭配少量桂枝（3-5g）引药上行，避免滋腻碍胃，同时监测晨起静息心率，若持续＞80次/分，需调整功法强度。</div></div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-red/10 text-morandi-red rounded-lg md:rounded-xl border border-morandi-red/20">🕐 06:20-10:38</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">腿软</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">出汗</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">肾虚</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">瘦身</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">长寿功</span>
+                        
+                    </div>
+                    
+                </div>
+                
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-blue tracking-tight">婚恋与星座讨论</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~20条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 76 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary">由<span class="name-tag" style="color:#798897;">阿文 Peter-Awen</span><span class="speech-tag"> 分享同学被骗婚引发婚恋话题，群友讨论相亲、骗婚、年龄差等。</span><span class="name-tag" style="color:#798897;">小双</span><span class="speech-tag"> 分享自己与年长丈夫的婚姻，</span><span class="name-tag" style="color:#798897;">🐉阿柳</span><span class="speech-tag"> 分析摩羯男性格。</span><span class="name-tag" style="color:#798897;">炁</span><span class="speech-tag"> 认为缘分需考验，</span><span class="name-tag" style="color:#798897;">鄧ᶻᵘᴵⁱⁿ</span><span class="speech-tag"> 反驳称真缘分无需考验。</span><span class="name-tag" style="color:#798897;">烟雨江南</span><span class="speech-tag"> 表示“无爱一身轻”，</span><span class="name-tag" style="color:#798897;">阿文 Peter-Awen</span><span class="speech-tag"> 总结“能量足才敢言爱”。氛围轻松，观点多元，无明确共识。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">婚恋中的星座标签（如摩羯男）易简化复杂人性，骗婚风险更与个体道德、法律意识相关，而非星座特质。从社会学看，大龄婚恋市场中，信息不对称是骗婚滋生的土壤，建议通过婚前财产公证、背景调查等法律手段降低风险。缘分“需考验”与“无需考验”的争议，实则是关系建立中“筛选机制”与“信任基础”的平衡——健康的关系需双方共同投入经营，而非单方面考验。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">婚恋中的星座标签（如摩羯男）易简化复杂人性，骗婚风险更与个体道德、法律意识相关，而非星座特质。从社会学看，大龄婚恋市场中，信息不对称是骗婚滋生的土壤，建议通过婚前财产公证、背景调查等法律手段降低风险。缘分“需考验”与“无需考验”的争议，实则是关系建立中“筛选机制”与“信任基础”的平衡——健康的关系需双方共同投入经营，而非单方面考验。</div></div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-blue/10 text-morandi-blue rounded-lg md:rounded-xl border border-morandi-blue/20">🕐 17:06-18:22</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">骗婚</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">摩羯男</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">缘分</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">能量</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">单身</span>
+                        
+                    </div>
+                    
+                </div>
+                
+                
+                <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-yellow tracking-tight">饮食养生方法交流</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~12条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 49 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary"><span class="name-tag" style="color:#a78f6b;">白月光</span><span class="speech-tag"> 询问荔枝皮去火用法，</span><span class="name-tag" style="color:#a78f6b;">baby羽</span><span class="speech-tag"> 和</span><span class="name-tag" style="color:#a78f6b;">阿文 Peter-Awen</span><span class="speech-tag"> 确认可煮水。</span><span class="name-tag" style="color:#a78f6b;">炁</span><span class="speech-tag"> 推荐猪肤汤滋阴，但</span><span class="name-tag" style="color:#a78f6b;">白月光</span><span class="speech-tag"> 担心发胖。</span><span class="name-tag" style="color:#a78f6b;">爻诺</span><span class="speech-tag"> 建议熬米汤补津液，</span><span class="name-tag" style="color:#a78f6b;">阿文 Peter-Awen</span><span class="speech-tag"> 强调好米汤有甜味。</span><span class="name-tag" style="color:#a78f6b;">未央花明</span><span class="speech-tag"> 分享五黑粉需九蒸九晒才好消化，</span><span class="name-tag" style="color:#a78f6b;">阿文 Peter-Awen</span><span class="speech-tag"> 提醒高糖问题。群友普遍认同食疗需根据体质选择，避免盲目跟风。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">荔枝皮煮水虽可去火，但需注意其性微温，实为引火归元，适合虚火上炎（如口干、手足心热）而非实火（如牙龈肿痛、便秘）。米汤补津液，最好选用陈粳米，新米易生湿；熬煮时加少量陈皮（1/4瓣）可理气助运，避免滋腻。猪肤汤滋阴润燥，若担心发胖，可去皮去脂，搭配山药、莲子等健脾食材，减少猪皮用量，兼顾滋阴与轻身。五黑粉九蒸九晒确能改善消化，但高糖体质者可搭配山楂片或荷叶茶，平衡糖分摄入。食疗需辨体质，建议咨询中医师调整配比，避免“千人一方”。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">荔枝皮煮水虽可去火，但需注意其性微温，实为引火归元，适合虚火上炎（如口干、手足心热）而非实火（如牙龈肿痛、便秘）。米汤补津液，最好选用陈粳米，新米易生湿；熬煮时加少量陈皮（1/4瓣）可理气助运，避免滋腻。猪肤汤滋阴润燥，若担心发胖，可去皮去脂，搭配山药、莲子等健脾食材，减少猪皮用量，兼顾滋阴与轻身。五黑粉九蒸九晒确能改善消化，但高糖体质者可搭配山楂片或荷叶茶，平衡糖分摄入。食疗需辨体质，建议咨询中医师调整配比，避免“千人一方”。</div></div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-yellow/10 text-morandi-yellow rounded-lg md:rounded-xl border border-morandi-yellow/20">🕐 09:11-10:00</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">荔枝皮</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">米汤</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">猪肤汤</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">五黑粉</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">滋阴</span>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+
+        <!-- ===== 经典金句（sticky 堆叠，颜色轮转） ===== -->
+        
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg pt-2 md:pt-6">
+            <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">经典金句。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-red/20 dark:text-morandi-red/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        气足不思食
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-red/20 dark:bg-morandi-red/30 flex items-center justify-center text-[10px] font-bold text-morandi-red">白</div>
+                            <span class="text-sm font-semibold text-apple-gray">白月光</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">07:48</span>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-blue/20 dark:text-morandi-blue/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        以前觉得爱就是付出，现在觉得爱就是能量的外溢，自身能量足了才敢言爱。
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-blue/20 dark:bg-morandi-blue/30 flex items-center justify-center text-[10px] font-bold text-morandi-blue">阿</div>
+                            <span class="text-sm font-semibold text-apple-gray">阿文 Peter-Awen</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">18:16</span>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-green/20 dark:text-morandi-green/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        本来无一物，何处惹尘埃。
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-green/20 dark:bg-morandi-green/30 flex items-center justify-center text-[10px] font-bold text-morandi-green">爻</div>
+                            <span class="text-sm font-semibold text-apple-gray">爻诺</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">09:33</span>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="sticky top-16 z-40 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-yellow/20 dark:text-morandi-yellow/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        无爱一身轻，多情人修了无情的道。
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-yellow/20 dark:bg-morandi-yellow/30 flex items-center justify-center text-[10px] font-bold text-morandi-yellow">烟</div>
+                            <span class="text-sm font-semibold text-apple-gray">烟雨江南</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">18:04</span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- ===== 待办事项（sticky 堆叠） ===== -->
+        
+        <section class="reveal">
+            <h3 class="text-xl md:text-2xl font-bold mb-6 md:mb-8 tracking-tight">待办事项。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 flex items-start gap-4 transition-transform duration-500">
+                    <div class="w-5 h-5 mt-0.5 rounded-full border-2 border-morandi-red flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText"><span class="name-tag" style="color:#b8837f;">白月光</span><span class="speech-tag"> 记录体重变化并增加长寿功练习。</span></p>
+                        <div class="flex flex-wrap gap-2 mt-1.5">
+                            
+                            <span class="text-xs font-medium text-morandi-red bg-morandi-red/10 px-2.5 py-1 rounded-full">📅 持续观察</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray bg-apple-lightGray dark:bg-white/5 px-2.5 py-1 rounded-full">👥 白月光</span>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 flex items-start gap-4 transition-transform duration-500">
+                    <div class="w-5 h-5 mt-0.5 rounded-full border-2 border-morandi-red flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">尝试荔枝皮煮水去火。</p>
+                        <div class="flex flex-wrap gap-2 mt-1.5">
+                            
+                            <span class="text-xs font-medium text-morandi-red bg-morandi-red/10 px-2.5 py-1 rounded-full">📅 本周末</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray bg-apple-lightGray dark:bg-white/5 px-2.5 py-1 rounded-full">👥 白月光</span>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- ===== 重要资源（sticky 堆叠） ===== -->
+        
+
+        <!-- ===== 悬而未决（sticky 堆叠） ===== -->
+        
+        <section class="reveal">
+            <h3 class="text-xl md:text-2xl font-bold mb-6 md:mb-8 tracking-tight">悬而未决。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 border-l-4 border-l-morandi-yellow mb-4 md:mb-6 transition-transform duration-500">
+                    <p class="text-base font-semibold text-apple-text dark:text-apple-darkText mb-2">肾积水该怎么解决？</p>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-apple-gray">
+                        <span>白月光 提问</span>
+                        <span>·</span><span>07:33</span>
+                        <span>·</span><span class="italic">@白月光@ 有肾结石和肾积水，询问解决方法。</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI参考</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">肾积水需根据病因和严重程度个体化处理。常见病因包括尿路结石、前列腺增生、肿瘤等，首要任务是明确梗阻部位和原因（通过B超、CT、尿路造影等检查）。轻度积水且病因明确（如小结石）可通过药物排石、抗感染治疗；中重度积水或由肿瘤、严重前列腺增生引起者，常需手术解除梗阻（如输尿管镜碎石、前列腺切除术、肿瘤切除等）。长期积水可能导致肾功能损害，需定期监测肾功能。建议及时至正规医院泌尿外科就诊，避免延误治疗。具体方案需专业医生评估后制定。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">肾积水需根据病因和严重程度个体化处理。常见病因包括尿路结石、前列腺增生、肿瘤等，首要任务是明确梗阻部位和原因（通过B超、CT、尿路造影等检查）。轻度积水且病因明确（如小结石）可通过药物排石、抗感染治疗；中重度积水或由肿瘤、严重前列腺增生引起者，常需手术解除梗阻（如输尿管镜碎石、前列腺切除术、肿瘤切除等）。长期积水可能导致肾功能损害，需定期监测肾功能。建议及时至正规医院泌尿外科就诊，避免延误治疗。具体方案需专业医生评估后制定。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 border-l-4 border-l-morandi-yellow mb-4 md:mb-6 transition-transform duration-500">
+                    <p class="text-base font-semibold text-apple-text dark:text-apple-darkText mb-2">有肾结石积水的药方吗？</p>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-apple-gray">
+                        <span>白月光 提问</span>
+                        <span>·</span><span>07:38</span>
+                        <span>·</span><span class="italic">@白月光@ 进一步询问具体药方。</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI参考</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">肾结石积水需根据结石大小、位置及积水程度个体化治疗，建议先经正规医院泌尿外科检查（如B超、CT）明确病因。轻度积水且结石较小（＜0.6cm），可尝试多饮水（每日＞2000ml）、适度运动（如跳绳）促进排石，配合中药（如金钱草、海金沙、车前子）利尿排石，但需中医辨证后使用；较大结石或积水严重者，可能需体外碎石或手术治疗。切勿自行用药，以免延误病情。具体方案应遵医嘱，定期复查评估效果。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">肾结石积水需根据结石大小、位置及积水程度个体化治疗，建议先经正规医院泌尿外科检查（如B超、CT）明确病因。轻度积水且结石较小（＜0.6cm），可尝试多饮水（每日＞2000ml）、适度运动（如跳绳）促进排石，配合中药（如金钱草、海金沙、车前子）利尿排石，但需中医辨证后使用；较大结石或积水严重者，可能需体外碎石或手术治疗。切勿自行用药，以免延误病情。具体方案应遵医嘱，定期复查评估效果。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- ===== 今日问答 FAQ（sticky 堆叠） ===== -->
+        
+        <section class="reveal">
+            <h3 class="text-xl md:text-2xl font-bold mb-6 md:mb-8 tracking-tight">今日问答。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-red bg-morandi-red/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">Q</span>
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">荔枝皮煮水能去火吗？</p>
+                    </div>
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">A</span>
+                        <p class="text-sm text-apple-gray leading-relaxed">可以，荔枝生火，皮去火，可一起煮水。</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        
+                        <span class="text-xs text-apple-gray/60">饮食养生</span>
+                        
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full text-morandi-green bg-morandi-green/10">已解决</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI验证</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">群友回答基本正确，但表述不够严谨。荔枝皮性凉，确实有清热降火、生津止渴的功效，煮水饮用可缓解因上火引起的口干、咽痛等症状。但需注意：1. 荔枝皮表面可能有农药残留，煮水前需彻底清洗或选择有机荔枝；2. 荔枝本身性温，过量食用易上火，皮煮水只能辅助缓解，不能替代药物治疗；3. 脾胃虚寒者不宜长期饮用，以免加重不适。此外，搭配菊花、金银花等清热食材，效果更佳。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">群友回答基本正确，但表述不够严谨。荔枝皮性凉，确实有清热降火、生津止渴的功效，煮水饮用可缓解因上火引起的口干、咽痛等症状。但需注意：1. 荔枝皮表面可能有农药残留，煮水前需彻底清洗或选择有机荔枝；2. 荔枝本身性温，过量食用易上火，皮煮水只能辅助缓解，不能替代药物治疗；3. 脾胃虚寒者不宜长期饮用，以免加重不适。此外，搭配菊花、金银花等清热食材，效果更佳。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-red bg-morandi-red/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">Q</span>
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">练功瘦太快怎么办？</p>
+                    </div>
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">A</span>
+                        <p class="text-sm text-apple-gray leading-relaxed">多练长寿功，平衡金刚功的消耗。</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        
+                        <span class="text-xs text-apple-gray/60">练功方法</span>
+                        
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full text-morandi-green bg-morandi-green/10">已解决</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI验证</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">群友建议“多练长寿功平衡金刚功消耗”有一定道理，但不够全面。长寿功（如八段锦、五禽戏等）确实能调和气血、增强代谢，但若体重下降过快（尤其伴随乏力、月经紊乱等），需警惕过度消耗或基础代谢问题。遗漏的关键点：1. 需评估饮食是否满足基础能量需求，低碳或节食会加速肌肉流失；2. 建议结合力量训练（如深蹲、平板支撑）保肌，避免代谢下降；3. 若体重骤降伴随健康异常，应暂停高强度功法，咨询医生排查潜在疾病（如甲亢、消化问题）。练功瘦身需循序渐进，兼顾营养与休息，才能实现健康可持续的减重。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">群友建议“多练长寿功平衡金刚功消耗”有一定道理，但不够全面。长寿功（如八段锦、五禽戏等）确实能调和气血、增强代谢，但若体重下降过快（尤其伴随乏力、月经紊乱等），需警惕过度消耗或基础代谢问题。遗漏的关键点：1. 需评估饮食是否满足基础能量需求，低碳或节食会加速肌肉流失；2. 建议结合力量训练（如深蹲、平板支撑）保肌，避免代谢下降；3. 若体重骤降伴随健康异常，应暂停高强度功法，咨询医生排查潜在疾病（如甲亢、消化问题）。练功瘦身需循序渐进，兼顾营养与休息，才能实现健康可持续的减重。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+                <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-red bg-morandi-red/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">Q</span>
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">肾积水怎么调理？</p>
+                    </div>
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">A</span>
+                        <p class="text-sm text-apple-gray leading-relaxed">练金刚功和长寿功，配合温肾利水中药。</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        
+                        <span class="text-xs text-apple-gray/60">健康咨询</span>
+                        
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full text-apple-gray bg-apple-lightGray dark:bg-white/5">部分解决</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI验证</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">群友回答部分正确但存在遗漏。金刚功、长寿功等传统功法可能辅助改善局部循环，但肾积水需明确病因（如结石、梗阻、肿瘤等），不同病因调理方案差异大，盲目练功可能延误治疗。温肾利水中药（如济生肾气丸）需辨证使用，实证（如湿热、结石）不宜温补。关键补充：肾积水首选病因治疗（如解除梗阻），严重时需手术；日常需低盐饮食，控制水分摄入，定期复查泌尿系超声及肾功能，避免使用肾毒性药物。中医调理需结合个体体质，建议在专业医师指导下进行。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">群友回答部分正确但存在遗漏。金刚功、长寿功等传统功法可能辅助改善局部循环，但肾积水需明确病因（如结石、梗阻、肿瘤等），不同病因调理方案差异大，盲目练功可能延误治疗。温肾利水中药（如济生肾气丸）需辨证使用，实证（如湿热、结石）不宜温补。关键补充：肾积水首选病因治疗（如解除梗阻），严重时需手术；日常需低盐饮食，控制水分摄入，定期复查泌尿系超声及肾功能，避免使用肾毒性药物。中医调理需结合个体体质，建议在专业医师指导下进行。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- 底部统计 -->
+        <section class="reveal border-t border-black/10 dark:border-white/10 pt-12 md:pt-16 relative">
+            <div class="divider-animate absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-morandi-blue/50 to-transparent"></div>
+            <div class="grid grid-cols-2 gap-4 md:gap-8 text-center">
+                <div>
+                    <div class="text-3xl md:text-5xl font-bold tracking-tighter mb-1 md:mb-2 text-morandi-red">0</div>
+                    <div class="text-sm md:text-lg font-semibold mb-1">文件或链接</div>
+                    <div class="text-xs md:text-sm text-apple-gray">群内分享的资源</div>
+                </div>
+                <div>
+                    <div class="text-3xl md:text-5xl font-bold tracking-tighter mb-1 md:mb-2 text-morandi-red">3</div>
+                    <div class="text-sm md:text-lg font-semibold mb-1">话题数</div>
+                    <div class="text-xs md:text-sm text-apple-gray">今日讨论主题</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 上一群/下一群导航 -->
+        <div class="flex items-center justify-between pt-8 pb-4">
+            
+            <button onclick="showSummary()" class="flex items-center gap-2 text-sm font-semibold text-apple-gray hover:text-apple-text dark:hover:text-apple-darkText transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                返回概览
+            </button>
+            
+            
+            <button onclick="showDetail('group2')" class="flex items-center gap-2 text-sm font-semibold text-apple-gray hover:text-apple-text dark:hover:text-apple-darkText transition-colors">
+                下一群
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+            
+        </div>
+
+    </main>
+    
+    <main id="detail-group2" class="detail-view-item hidden max-w-3xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-16 md:pb-24 space-y-24 md:space-y-32">
+
+        <!-- Hero -->
+        <section class="text-center reveal relative z-10">
+            <h2 class="text-xs md:text-sm font-semibold tracking-widest text-apple-gray uppercase mb-3 md:mb-4">Daily Report</h2>
+            <h1 class="font-extrabold tracking-tight mb-4 md:mb-6 text-3xl md:text-5xl">
+                雷家山金刚长寿功来观群8
+            </h1>
+            <p class="text-base md:text-xl text-apple-gray font-medium max-w-xl mx-auto mb-10 md:mb-16" style="text-align:center">
+                统计时段：5月24日 05:48 → 5月25日 09:44
+            </p>
+            <div class="hero-parallax flex flex-wrap justify-center gap-8 md:gap-20">
+                <div>
+                    <div class="text-6xl md:text-[8rem] leading-none font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-morandi-blue to-morandi-purple inline-block mb-3 md:mb-6">
+                        14
+                    </div>
+                    <div class="text-sm md:text-xl text-apple-gray font-semibold tracking-wide">条新消息</div>
+                </div>
+                <div>
+                    <div class="text-6xl md:text-[8rem] leading-none font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-morandi-blue to-morandi-green inline-block mb-3 md:mb-6">
+                        5
+                    </div>
+                    <div class="text-sm md:text-xl text-apple-gray font-semibold tracking-wide">人参与发言</div>
+                </div>
+            </div>
+            
+            <div class="mt-10 md:mt-14 flex justify-center">
+                <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-apple-lightGray dark:bg-white/10 border border-black/5 dark:border-white/10">
+                    <span class="text-sm font-semibold text-apple-gray">今日氛围：深度</span>
+                    
+                    <span class="text-sm text-apple-gray/70 hidden md:inline">· 群友围绕功法传承和心性修养展开深度讨论，氛围严肃而富有哲理。</span>
+                    
+                </div>
+            </div>
+            
+        </section>
+
+        <!-- ===== 重要精华（sticky 重叠卡片，标题颜色轮转） ===== -->
+        
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg">
+            <div class="pt-4 md:pt-8">
+                <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">重要精华。</h3>
+                <div class="relative pb-6 md:pb-12">
+                    
+                    
+                    
+                    <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-blue mb-3 md:mb-4">功法被篡改事件讨论</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed"><span class="name-tag" style="color:#798897;">付雪</span><span class="speech-tag">分享第三篇故事，提到有人改名改动作、瞎教别人、骗道爷去泰国并扣押护照，认为这是心术不正。</span></p>
+                    </div>
+                    
+                    
+                    <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-blue mb-3 md:mb-4">心正与传法关系探讨</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed"><span class="name-tag" style="color:#798897;">付雪</span>和<span class="name-tag" style="color:#798897;">真光</span><span class="speech-tag">讨论传法者心正的重要性，认为心正才能传正法，否则即使内容正确也缺乏力量。</span></p>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+        
+
+        <!-- ===== 具体话题（sticky 卡片列表，标题颜色轮转） ===== -->
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg">
+            <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">具体话题。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-blue tracking-tight">功法被篡改事件讨论</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~5条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 208 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary"><span class="name-tag" style="color:#798897;">付雪</span><span class="speech-tag">在早上6:16提到看到第三篇故事，内容涉及有人远渡他国遭骗，教了别人后改名改动作、瞎教别人，还骗道爷去泰国并扣押护照。她认为这是心术不正、没有责任心和德性，教出的都是邪的。</span><span class="name-tag" style="color:#798897;">做个妙人</span><span class="speech-tag">回应说还有更过分的故事不方便写。</span><span class="name-tag" style="color:#798897;">真光</span><span class="speech-tag">在9:18补充说如果更改曲解就不能算正法，但照原样说出则算正法。韦迪在9:40评论泰国那帮人人心不正早晚得恶果。大家一致认为这种行为不可取，强调心正的重要性。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="openAiSheet(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">此类事件在传统功法传承中并非孤例，历史上“秘术篡改”常伴随“神化包装”以牟利，如某功法将吐纳术改为“能量灌顶”，实则通过控制呼吸节奏诱导信徒精神依赖。建议学习者：1. 查验传承谱系是否可追溯至权威典籍；2. 对“速成”“改头换面”的功法保持警惕，传统功法讲究“循序渐进”，篡改往往破坏生理协调性；3. 遇到扣押护照等控制行为，立即向驻泰使领馆求助（全球领事保护热线+86-10-12308）。心正不仅是道德要求，更是避免陷入精神操控的第一道防线。</div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-blue/10 text-morandi-blue rounded-lg md:rounded-xl border border-morandi-blue/20">🕐 06:16-09:44</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">改名改动作</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">扣押护照</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">心术不正</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">正法</span>
+                        
+                    </div>
+                    
+                </div>
+                
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-blue tracking-tight">心正与传法关系探讨</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~4条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 72 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary"><span class="name-tag" style="color:#798897;">付雪</span><span class="speech-tag">在9:46引用黑格尔名言，指出同一句格言从年轻人口中说出与饱经世事者说出意蕴不同，强调人是第一位，讲法包含证量磁场能量。她认为心要正，检验标准是有无私心。随后在10:02补充说人正内容正，即使证量不够也可以讲法，有时老师没证道弟子却成道。10:30进一步指出世间无定法，对机说法，人始终是第一位，公众只能讲妥当话。</span><span class="name-tag" style="color:#798897;">真光</span><span class="speech-tag">在9:18的观点与之呼应，认为照原样说出的就是正法。讨论形成共识：传法者心正比内容更重要。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="openAiSheet(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">心正与传法的关系，可关联佛教“以心印心”的禅宗传统，强调心性修养是传法的根本前提。历史上，六祖惠能以“本来无一物”的顿悟心性传法，与神秀“时时勤拂拭”的渐修形成对比，印证了心正对传法效能的决定性作用。此外，现代心理学研究也表明，传法者的真诚度（authenticity）直接影响听众的接受度，这与“心正则磁场能量足”的讨论形成跨学科呼应。建议传法者注重日常心性修炼，而非仅追求证量或内容完美。</div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-blue/10 text-morandi-blue rounded-lg md:rounded-xl border border-morandi-blue/20">🕐 09:18-10:30</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">心正</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">传法</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">证量</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">对机说法</span>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+
+        <!-- ===== 经典金句（sticky 堆叠，颜色轮转） ===== -->
+        
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg pt-2 md:pt-6">
+            <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">经典金句。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-blue/20 dark:text-morandi-blue/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        我是看到第三篇，远渡他国遭人骗，教了别人，别人改名改动作，瞎教别人，还骗道爷去泰国，竟还扣押道爷护照，这就是心术不正，没有责任心和德性，所以这种人教出的就是邪…
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-blue/20 dark:bg-morandi-blue/30 flex items-center justify-center text-[10px] font-bold text-morandi-blue">付</div>
+                            <span class="text-sm font-semibold text-apple-gray">付雪</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">06:16</span>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-blue/20 dark:text-morandi-blue/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        同一句格言——黑格尔。同一句格言，从年轻人的口中说出，即便理解无误，也远不及饱经世事的成年人道出时那般意蕴深远、力量十足。/人是第一位，讲出来，包含本身的证量…
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-blue/20 dark:bg-morandi-blue/30 flex items-center justify-center text-[10px] font-bold text-morandi-blue">付</div>
+                            <span class="text-sm font-semibold text-apple-gray">付雪</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">09:46</span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- ===== 待办事项（sticky 堆叠） ===== -->
+        
+
+        <!-- ===== 重要资源（sticky 堆叠） ===== -->
+        
+
+        <!-- ===== 悬而未决（sticky 堆叠） ===== -->
+        
+
+        <!-- ===== 今日问答 FAQ（sticky 堆叠） ===== -->
+        
+        <section class="reveal">
+            <h3 class="text-xl md:text-2xl font-bold mb-6 md:mb-8 tracking-tight">今日问答。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-blue bg-morandi-blue/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">Q</span>
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">改名改动作的功法还能算正法吗？</p>
+                    </div>
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">A</span>
+                        <p class="text-sm text-apple-gray leading-relaxed"><span class="name-tag" style="color:#8f9d8c;">真光</span><span class="speech-tag">认为如果更改曲解就不能算正法，但照原样说出则算。</span><span class="name-tag" style="color:#8f9d8c;">付雪</span><span class="speech-tag">强调心正最重要，心不正则教出的都是邪的。</span></p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        
+                        <span class="text-xs text-apple-gray/60">练功方法</span>
+                        
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full text-morandi-green bg-morandi-green/10">已解决</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI验证</span>
+                            
+                            <button type="button" class="expand-btn" onclick="openAiSheet(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden"><span class="speech-tag">群友回答部分准确，但存在简化。</span><span class="name-tag" style="color:#8f9d8c;">真光</span>与<span class="name-tag" style="color:#8f9d8c;">付雪</span><span class="speech-tag">的观点代表宗教伦理中“形式”与“实质”的常见分歧，但未提及历史背景：正法（Dharma）在佛教中本指“佛陀教法”，强调“契理契机”（契合真理与时代），允许因时因地调整形式（如禅宗“教外别传”），但核心教义（如四圣谛、因果）不可曲解。遗漏关键点：正法需同时具备“三法印”（诸行无常、诸法无我、涅槃寂静）作为检验标准，仅“照原样”或“心正”均不充分，需结合教义本质与实践验证。此外，宗教改革史上（如马丁·路德），对“正法”的界定常涉及权威解释权争议，非仅个人心念或形式传承可定论。</span></div>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- 底部统计 -->
+        <section class="reveal border-t border-black/10 dark:border-white/10 pt-12 md:pt-16 relative">
+            <div class="divider-animate absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-morandi-blue/50 to-transparent"></div>
+            <div class="grid grid-cols-2 gap-4 md:gap-8 text-center">
+                <div>
+                    <div class="text-3xl md:text-5xl font-bold tracking-tighter mb-1 md:mb-2 text-morandi-blue">0</div>
+                    <div class="text-sm md:text-lg font-semibold mb-1">文件或链接</div>
+                    <div class="text-xs md:text-sm text-apple-gray">群内分享的资源</div>
+                </div>
+                <div>
+                    <div class="text-3xl md:text-5xl font-bold tracking-tighter mb-1 md:mb-2 text-morandi-blue">2</div>
+                    <div class="text-sm md:text-lg font-semibold mb-1">话题数</div>
+                    <div class="text-xs md:text-sm text-apple-gray">今日讨论主题</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 上一群/下一群导航 -->
+        <div class="flex items-center justify-between pt-8 pb-4">
+            
+            <button onclick="showDetail('group1')" class="flex items-center gap-2 text-sm font-semibold text-apple-gray hover:text-apple-text dark:hover:text-apple-darkText transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                上一群
+            </button>
+            
+            
+            <button onclick="showDetail('group3')" class="flex items-center gap-2 text-sm font-semibold text-apple-gray hover:text-apple-text dark:hover:text-apple-darkText transition-colors">
+                下一群
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+            
+        </div>
+
+    </main>
+    
+    <main id="detail-group3" class="detail-view-item hidden max-w-3xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-16 md:pb-24 space-y-24 md:space-y-32">
+
+        <!-- Hero -->
+        <section class="text-center reveal relative z-10">
+            <h2 class="text-xs md:text-sm font-semibold tracking-widest text-apple-gray uppercase mb-3 md:mb-4">Daily Report</h2>
+            <h1 class="font-extrabold tracking-tight mb-4 md:mb-6 text-4xl md:text-6xl">
+                胡子哥的咖啡坑
+            </h1>
+            <p class="text-base md:text-xl text-apple-gray font-medium max-w-xl mx-auto mb-10 md:mb-16" style="text-align:center">
+                统计时段：5月24日 00:00 → 5月25日 11:49
+            </p>
+            <div class="hero-parallax flex flex-wrap justify-center gap-8 md:gap-20">
+                <div>
+                    <div class="text-6xl md:text-[8rem] leading-none font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-morandi-green to-morandi-purple inline-block mb-3 md:mb-6">
+                        772
+                    </div>
+                    <div class="text-sm md:text-xl text-apple-gray font-semibold tracking-wide">条新消息</div>
+                </div>
+                <div>
+                    <div class="text-6xl md:text-[8rem] leading-none font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-morandi-green to-morandi-green inline-block mb-3 md:mb-6">
+                        34
+                    </div>
+                    <div class="text-sm md:text-xl text-apple-gray font-semibold tracking-wide">人参与发言</div>
+                </div>
+            </div>
+            
+            <div class="mt-10 md:mt-14 flex justify-center">
+                <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-apple-lightGray dark:bg-white/10 border border-black/5 dark:border-white/10">
+                    <span class="text-sm font-semibold text-apple-gray">今日氛围：热烈</span>
+                    
+                    <span class="text-sm text-apple-gray/70 hidden md:inline">· 群内讨论热烈，围绕咖啡设备评测、618优惠和日常吐槽，互动频繁。</span>
+                    
+                </div>
+            </div>
+            
+        </section>
+
+        <!-- ===== 重要精华（sticky 重叠卡片，标题颜色轮转） ===== -->
+        
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg">
+            <div class="pt-4 md:pt-8">
+                <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">重要精华。</h3>
+                <div class="relative pb-6 md:pb-12">
+                    
+                    
+                    
+                    <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-green mb-3 md:mb-4">hoyi机主发布S5手磨详细评测</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed">hoyi机主对比S5与锤头鲨、M01、MK4，指出S5甜感突出但风味指向性差，锤头鲨仍是最强手磨。</p>
+                    </div>
+                    
+                    
+                    <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-blue mb-3 md:mb-4">C40磨豆机发货问题引发讨论</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed">多位群友询问C40发货情况，有群友选择要豆子补偿，但部分人担心风险不敢要。</p>
+                    </div>
+                    
+                    
+                    <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-yellow mb-3 md:mb-4"><span class="name-tag" style="color:#a78f6b;">cj9959279</span><span class="speech-tag">求推荐半自动咖啡机</span></h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed"><span class="name-tag" style="color:#a78f6b;">cj9959279</span><span class="speech-tag">预算5k内，群友推荐EM30、Bianca等，并讨论淘金币和限时红包优惠。</span></p>
+                    </div>
+                    
+                    
+                    <div class="sticky top-16 z-40 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-red mb-3 md:mb-4">胡子哥探路Mavo新磨并吐槽</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed">胡子哥和黑白测试Mavo新磨，发现跳豆、研磨效率低，认为Mavo靠幻刺撑着。</p>
+                    </div>
+                    
+                    
+                    <div class="sticky top-20 z-50 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                        <h4 class="text-2xl md:text-3xl font-bold leading-snug tracking-tight text-morandi-purple mb-3 md:mb-4">618优惠信息密集分享</h4>
+                        <p class="text-apple-gray text-base md:text-lg font-medium leading-relaxed">群友分享淘宝返利、拼多多减减卡、库迪免单等优惠，并讨论淘金币和限时红包技巧。</p>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+        
+
+        <!-- ===== 具体话题（sticky 卡片列表，标题颜色轮转） ===== -->
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg">
+            <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">具体话题。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-green tracking-tight">S5手磨评测与对比</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~15条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 118 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary"><span class="speech-tag">hoyi机主详细分享了S5手磨的评测结果，与锤头鲨、M01、MK4进行对比。他指出S5甜感非常突出，几乎没有负面风味，但风味指向性极差，风味杂糅在一起。锤头鲨依然是手磨中的最强，M01风味明亮但有水感，MK4有根茎味。群友</span><span class="name-tag" style="color:#8f9d8c;">cj9959279</span><span class="speech-tag">询问S5是否适合日深烘焙，hoyi机主认为没必要，因为风味指向性差。最终</span><span class="name-tag" style="color:#8f9d8c;">cj9959279</span><span class="speech-tag">以426元购入，hoyi机主建议退货。该话题包含1条语音/图片，建议回群查看完整内容。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">S5手磨的陶瓷锥齿设计在研磨均匀性上其实有独特优势，尤其对浅烘豆的油脂释放更充分，这也是其甜感突出的物理基础。但风味杂糅问题本质是研磨曲线与滤杯匹配度不足——建议搭配V60等单孔滤杯，减少水流扰动，或通过研磨度微调（比常规细0.5级）来提升风味清晰度。若追求日深烘焙的焦糖感，可尝试“分段研磨法”：先粗磨破壁再细磨，兼顾油脂与萃取效率，避免因过度研磨导致的杂味。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">S5手磨的陶瓷锥齿设计在研磨均匀性上其实有独特优势，尤其对浅烘豆的油脂释放更充分，这也是其甜感突出的物理基础。但风味杂糅问题本质是研磨曲线与滤杯匹配度不足——建议搭配V60等单孔滤杯，减少水流扰动，或通过研磨度微调（比常规细0.5级）来提升风味清晰度。若追求日深烘焙的焦糖感，可尝试“分段研磨法”：先粗磨破壁再细磨，兼顾油脂与萃取效率，避免因过度研磨导致的杂味。</div></div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-green/10 text-morandi-green rounded-lg md:rounded-xl border border-morandi-green/20">🕐 17:07 - 19:05</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">S5</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">手磨</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">评测</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">锤头鲨</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">M01</span>
+                        
+                    </div>
+                    
+                </div>
+                
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-blue tracking-tight">C40磨豆机发货与补偿</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~8条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 23 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary"><span class="speech-tag">多位群友询问C40磨豆机的发货情况，</span><span class="name-tag" style="color:#798897;">超级炸鸡大王</span><span class="speech-tag">表示尚未发货，且商家保证金已用完，暂时无法处理。</span><span class="name-tag" style="color:#798897;">cj9959279</span><span class="speech-tag">选择要80元的花魁豆子作为补偿，但</span><span class="name-tag" style="color:#798897;">超级炸鸡大王</span><span class="speech-tag">不敢要，担心风险。</span><span class="name-tag" style="color:#798897;">TerryT</span><span class="speech-tag">询问豆子详情，得知是200g花魁。群友对C40的发货进度普遍感到焦虑，部分人选择退款或接受补偿。该话题包含1条语音/图片，建议回群查看完整内容。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">C40磨豆机发货延迟背后，可能涉及供应链的“长尾效应”——核心部件（如刀盘）缺货会导致整机积压，而商家保证金耗尽则反映其资金链承压。建议群友优先通过平台维权通道（如淘宝“仅退款”规则）保障权益，而非私下接受补偿；若选择补偿，可要求商家提供豆子批次检测报告，规避品控风险。此外，同类事件中，部分商家会以“预付定金优先发货”缓解压力，可主动询问是否适用。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">C40磨豆机发货延迟背后，可能涉及供应链的“长尾效应”——核心部件（如刀盘）缺货会导致整机积压，而商家保证金耗尽则反映其资金链承压。建议群友优先通过平台维权通道（如淘宝“仅退款”规则）保障权益，而非私下接受补偿；若选择补偿，可要求商家提供豆子批次检测报告，规避品控风险。此外，同类事件中，部分商家会以“预付定金优先发货”缓解压力，可主动询问是否适用。</div></div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-blue/10 text-morandi-blue rounded-lg md:rounded-xl border border-morandi-blue/20">🕐 19:33 - 19:56</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">C40</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">发货</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">补偿</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">花魁</span>
+                        
+                    </div>
+                    
+                </div>
+                
+                
+                <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-yellow tracking-tight">半自动咖啡机选购讨论</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~10条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 195 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary"><span class="name-tag" style="color:#a78f6b;">cj9959279</span><span class="speech-tag">提出想趁618更换半自动咖啡机，预算5k以内，稍微超一点也可以。群友别让库存成为负担推荐EM30，奇异果建议加钱上Bianca。</span><span class="name-tag" style="color:#a78f6b;">cj9959279</span><span class="speech-tag">表示会蹲好价，并提到淘金币抵扣和老客返利。</span><span class="name-tag" style="color:#a78f6b;">TerryT</span><span class="speech-tag">和n姐等人也参与了讨论，但未形成统一推荐。该话题包含1条语音/图片，建议回群查看完整内容。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">半自动咖啡机选购中，EM30作为德龙经典机型，优势在于温控稳定和配件通用性，但蒸汽棒压力不足（约1.2bar），打奶泡时需手动控温避免烫奶。若考虑Bianca，其PID温控和预浸泡功能能提升萃取稳定性，但需确认家中电压是否支持220V（部分型号为110V）。建议优先关注磨豆机搭配，EM30搭配入门级磨豆机（如泰摩C2）更能发挥性能，而Bianca需中高端磨豆机匹配。此外，618期间留意官方翻新机，部分渠道提供1年质保，性价比优于全新机。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">半自动咖啡机选购中，EM30作为德龙经典机型，优势在于温控稳定和配件通用性，但蒸汽棒压力不足（约1.2bar），打奶泡时需手动控温避免烫奶。若考虑Bianca，其PID温控和预浸泡功能能提升萃取稳定性，但需确认家中电压是否支持220V（部分型号为110V）。建议优先关注磨豆机搭配，EM30搭配入门级磨豆机（如泰摩C2）更能发挥性能，而Bianca需中高端磨豆机匹配。此外，618期间留意官方翻新机，部分渠道提供1年质保，性价比优于全新机。</div></div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-yellow/10 text-morandi-yellow rounded-lg md:rounded-xl border border-morandi-yellow/20">🕐 17:13 - 20:28</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">半自动咖啡机</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">618</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">EM30</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">Bianca</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">预算</span>
+                        
+                    </div>
+                    
+                </div>
+                
+                
+                <div class="sticky top-16 z-40 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex justify-between items-start mb-6 md:mb-8">
+                        <h4 class="text-2xl md:text-3xl font-bold w-3/4 leading-snug text-morandi-red tracking-tight">Mavo新磨评测与吐槽</h4>
+                        <div class="flex flex-col items-end gap-1">
+                            
+                            <span class="text-xs md:text-sm font-semibold text-apple-gray bg-apple-lightGray dark:bg-black/40 px-3 py-1.5 rounded-full">~12条</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray/70">约 5 分钟</span>
+                            
+                        </div>
+                    </div>
+                    <p class="text-apple-gray text-base md:text-lg mb-6 md:mb-10 font-medium topic-summary"><span class="speech-tag">胡子哥和黑白测试了Mavo的新款手磨，发现存在跳豆、研磨效率低的问题，磨同样豆子的时间是幻刺的两倍。胡子哥认为Mavo这两年全靠幻刺撑着，其他产品不温不火。黑白补充说刀盘小且经常空磨，体验不佳。</span><span class="name-tag" style="color:#b8837f;">ㅤㅤ</span><span class="speech-tag">指出Mavo其他产品与友商拉不开差距。hoyi机主则认为Mavo缺乏自主设计。该话题包含1条语音/图片，建议回群查看完整内容。</span></p>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI补充</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">Mavo近年产品策略确实依赖幻刺的口碑积累，其新品研发可能存在“吃老本”倾向。值得注意的是，Mavo在刀盘材质和研磨结构上缺乏创新，对比同类品牌如1Zpresso的Q系列或Timemore的C3系列，在研磨均匀度和豆仓设计上差距明显。建议用户若追求效率，可关注品牌后续是否升级刀盘合金或优化传动结构；若已购入，可通过调整研磨刻度（如分阶段研磨）或搭配小容量豆仓减少空磨影响，但根本改善仍需品牌技术迭代。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">Mavo近年产品策略确实依赖幻刺的口碑积累，其新品研发可能存在“吃老本”倾向。值得注意的是，Mavo在刀盘材质和研磨结构上缺乏创新，对比同类品牌如1Zpresso的Q系列或Timemore的C3系列，在研磨均匀度和豆仓设计上差距明显。建议用户若追求效率，可关注品牌后续是否升级刀盘合金或优化传动结构；若已购入，可通过调整研磨刻度（如分阶段研磨）或搭配小容量豆仓减少空磨影响，但根本改善仍需品牌技术迭代。</div></div>
+                        
+                    </div>
+                    
+                    
+                    <div class="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-semibold text-apple-text dark:text-apple-darkText">
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-morandi-red/10 text-morandi-red rounded-lg md:rounded-xl border border-morandi-red/20">🕐 22:20 - 22:25</span>
+                        
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">Mavo</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">手磨</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">评测</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">跳豆</span>
+                        
+                        <span class="px-3 py-1.5 md:px-4 md:py-2 bg-apple-lightGray dark:bg-white/5 rounded-lg md:rounded-xl border border-black/5 dark:border-white/5">幻刺</span>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+
+        <!-- ===== 经典金句（sticky 堆叠，颜色轮转） ===== -->
+        
+        <section class="reveal relative z-20 bg-apple-bg dark:bg-apple-darkBg pt-2 md:pt-6">
+            <h3 class="text-2xl md:text-3xl font-bold mb-6 md:mb-10 tracking-tight">经典金句。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-green/20 dark:text-morandi-green/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        s5的话，甜，很甜，几乎没有来自于自己特性的负面风味，但是风味指向性非常差，风味完全为了甜而杂糅到一起，并且甜感非常低沉。
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-green/20 dark:bg-morandi-green/30 flex items-center justify-center text-[10px] font-bold text-morandi-green">h</div>
+                            <span class="text-sm font-semibold text-apple-gray">hoyi机主（六折版）aka alo王</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">17:13</span>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-blue/20 dark:text-morandi-blue/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        你99%的情况都不可能选一个风味指向一坨的磨
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-blue/20 dark:bg-morandi-blue/30 flex items-center justify-center text-[10px] font-bold text-morandi-blue">h</div>
+                            <span class="text-sm font-semibold text-apple-gray">hoyi机主（六折版）aka alo王</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">18:57</span>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-green/20 dark:text-morandi-green/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        个人感觉mavo这两年全靠幻刺撑着 剩下产品不温不火 想火火火不起来的感觉
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-green/20 dark:bg-morandi-green/30 flex items-center justify-center text-[10px] font-bold text-morandi-green">喝</div>
+                            <span class="text-sm font-semibold text-apple-gray">喝过bop最高分标王的胡子哥</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">22:25</span>
+                        
+                    </div>
+                </div>
+                
+                
+                <div class="sticky top-16 z-40 bg-apple-surface dark:bg-apple-darkSurface rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="text-5xl md:text-6xl text-morandi-yellow/20 dark:text-morandi-yellow/40 font-serif leading-none mb-2 md:mb-4 quote-mark text-center">"</div>
+                    <p class="text-lg md:text-xl font-bold text-apple-text dark:text-[#c8c8cc] mb-6 leading-relaxed mx-auto" style="text-align:center; max-width:82%">
+                        先有自主设计再说火不火吧
+                    </p>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-morandi-yellow/20 dark:bg-morandi-yellow/30 flex items-center justify-center text-[10px] font-bold text-morandi-yellow">h</div>
+                            <span class="text-sm font-semibold text-apple-gray">hoyi机主（六折版）aka alo王</span>
+                        </div>
+                        
+                        <span class="text-xs font-semibold text-apple-gray bg-apple-lightGray dark:bg-white/5 px-3 py-1.5 rounded-full">22:25</span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- ===== 待办事项（sticky 堆叠） ===== -->
+        
+        <section class="reveal">
+            <h3 class="text-xl md:text-2xl font-bold mb-6 md:mb-8 tracking-tight">待办事项。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 flex items-start gap-4 transition-transform duration-500">
+                    <div class="w-5 h-5 mt-0.5 rounded-full border-2 border-morandi-green flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">已购S5的群友考虑退货</p>
+                        <div class="flex flex-wrap gap-2 mt-1.5">
+                            
+                            <span class="text-xs font-medium text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full">📅 尽快</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray bg-apple-lightGray dark:bg-white/5 px-2.5 py-1 rounded-full">👥 cj9959279等</span>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 flex items-start gap-4 transition-transform duration-500">
+                    <div class="w-5 h-5 mt-0.5 rounded-full border-2 border-morandi-green flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">关注C40发货情况，联系客服确认</p>
+                        <div class="flex flex-wrap gap-2 mt-1.5">
+                            
+                            <span class="text-xs font-medium text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full">📅 尽快</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray bg-apple-lightGray dark:bg-white/5 px-2.5 py-1 rounded-full">👥 超级炸鸡大王等</span>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 flex items-start gap-4 transition-transform duration-500">
+                    <div class="w-5 h-5 mt-0.5 rounded-full border-2 border-morandi-green flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">蹲618半自动咖啡机好价，利用淘金币和限时红包</p>
+                        <div class="flex flex-wrap gap-2 mt-1.5">
+                            
+                            <span class="text-xs font-medium text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full">📅 618期间</span>
+                            
+                            
+                            <span class="text-xs font-medium text-apple-gray bg-apple-lightGray dark:bg-white/5 px-2.5 py-1 rounded-full">👥 cj9959279等</span>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- ===== 重要资源（sticky 堆叠） ===== -->
+        
+        <section class="reveal">
+            <div class="flex items-end justify-between mb-6 md:mb-8">
+                <h3 class="text-xl md:text-2xl font-bold">重要资源。</h3>
+                <span class="text-xs md:text-sm font-medium text-apple-gray bg-apple-lightGray dark:bg-white/10 px-3 py-1 rounded-full">共提取 8 份</span>
+            </div>
+            <div class="relative pb-6 md:pb-12">
+                
+                <div class="sticky top-4 z-10 mb-4 md:mb-6">
+                
+                <a href="https://m.tb.cn/h.RWNT8kf" target="_blank" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5 block">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RWNT8kf</h4>
+                        
+                        <p class="text-xs md:text-sm text-apple-gray mb-1 leading-relaxed">群聊中出现的链接，建议打开确认价值并整理到主题笔记。</p>
+                        
+                        <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+                            <span class="truncate">ㅤㅤ 分享</span><span>·</span>
+                            <span class="whitespace-nowrap">链接</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0 link-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                </div>
+                
+                <div class="sticky top-8 z-20 mb-4 md:mb-6">
+                
+                <a href="https://m.tb.cn/h.RWN6v4h" target="_blank" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5 block">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RWN6v4h</h4>
+                        
+                        <p class="text-xs md:text-sm text-apple-gray mb-1 leading-relaxed">群聊中出现的链接，建议打开确认价值并整理到主题笔记。</p>
+                        
+                        <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+                            <span class="truncate">hoyi机主（六折版）aka alo王 分享</span><span>·</span>
+                            <span class="whitespace-nowrap">链接</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0 link-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                </div>
+                
+                <div class="sticky top-12 z-30 mb-4 md:mb-6">
+                
+                <a href="https://m.tb.cn/h.RV6geni" target="_blank" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5 block">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RV6geni</h4>
+                        
+                        <p class="text-xs md:text-sm text-apple-gray mb-1 leading-relaxed">群聊中出现的链接，建议打开确认价值并整理到主题笔记。</p>
+                        
+                        <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+                            <span class="truncate">控制黄色大脑真的很辛苦 分享</span><span>·</span>
+                            <span class="whitespace-nowrap">链接</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0 link-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                </div>
+                
+                <div class="sticky top-16 z-40 mb-4 md:mb-6">
+                
+                <a href="https://m.tb.cn/h.RWN6laM" target="_blank" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5 block">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RWN6laM</h4>
+                        
+                        <p class="text-xs md:text-sm text-apple-gray mb-1 leading-relaxed">群聊中出现的链接，建议打开确认价值并整理到主题笔记。</p>
+                        
+                        <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+                            <span class="truncate">cj9959279 分享</span><span>·</span>
+                            <span class="whitespace-nowrap">链接</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0 link-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                </div>
+                
+                <div class="sticky top-20 z-50 mb-4 md:mb-6">
+                
+                <a href="https://m.tb.cn/h.RWN6v4h" target="_blank" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5 block">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RWN6v4h</h4>
+                        
+                        <p class="text-xs md:text-sm text-apple-gray mb-1 leading-relaxed">群聊中出现的链接，建议打开确认价值并整理到主题笔记。</p>
+                        
+                        <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+                            <span class="truncate">ㅤㅤ 分享</span><span>·</span>
+                            <span class="whitespace-nowrap">链接</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0 link-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                </div>
+                
+                <div class="sticky top-24 z-60 mb-4 md:mb-6">
+                
+                <a href="https://m.tb.cn/h.RWN6laM" target="_blank" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5 block">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RWN6laM</h4>
+                        
+                        <p class="text-xs md:text-sm text-apple-gray mb-1 leading-relaxed">群聊中出现的链接，建议打开确认价值并整理到主题笔记。</p>
+                        
+                        <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+                            <span class="truncate">ㅤㅤ 分享</span><span>·</span>
+                            <span class="whitespace-nowrap">链接</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0 link-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                </div>
+                
+                <div class="sticky top-28 z-70 mb-4 md:mb-6">
+                
+                <a href="https://m.tb.cn/h.R3TbNpB" target="_blank" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5 block">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.R3TbNpB</h4>
+                        
+                        <p class="text-xs md:text-sm text-apple-gray mb-1 leading-relaxed">群聊中出现的链接，建议打开确认价值并整理到主题笔记。</p>
+                        
+                        <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+                            <span class="truncate">喝过bop最高分标王的胡子哥 分享</span><span>·</span>
+                            <span class="whitespace-nowrap">链接</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0 link-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                </div>
+                
+                <div class="sticky top-32 z-80 mb-4 md:mb-6">
+                
+                <a href="https://m.tb.cn/h.RWNT8kf" target="_blank" class="group bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-6 flex items-center gap-4 md:gap-6 shadow-apple transition-all duration-300 hover:shadow-apple-hover hover:-translate-y-1 cursor-pointer border border-black/5 dark:border-white/5 block">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 dark:bg-orange-900/20 text-morandi-yellow flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-base md:text-lg font-semibold truncate mb-1 text-morandi-yellow">https://m.tb.cn/h.RWNT8kf</h4>
+                        
+                        <p class="text-xs md:text-sm text-apple-gray mb-1 leading-relaxed">群聊中出现的链接，建议打开确认价值并整理到主题笔记。</p>
+                        
+                        <div class="text-xs md:text-sm text-apple-gray flex items-center gap-1.5 md:gap-2">
+                            <span class="truncate">cj9959279 分享</span><span>·</span>
+                            <span class="whitespace-nowrap">链接</span>
+                        </div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-apple-lightGray dark:bg-white/5 flex items-center justify-center text-apple-gray group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0 link-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                    </div>
+                </a>
+                
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- ===== 悬而未决（sticky 堆叠） ===== -->
+        
+        <section class="reveal">
+            <h3 class="text-xl md:text-2xl font-bold mb-6 md:mb-8 tracking-tight">悬而未决。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 border-l-4 border-l-morandi-yellow mb-4 md:mb-6 transition-transform duration-500">
+                    <p class="text-base font-semibold text-apple-text dark:text-apple-darkText mb-2">千元以内手磨最优解是什么？</p>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-apple-gray">
+                        <span>cj9959279 提问</span>
+                        <span>·</span><span>17:34</span>
+                        <span>·</span><span class="italic">在讨论S5表现后，询问千元内手磨推荐。</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI参考</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">千元以内手磨的“最优解”需结合使用场景与核心需求：若追求极致性价比与耐用性，Hario Slim+（约200元）是专业共识推荐，其陶瓷刀盘研磨均匀、可调节粗细，适合手冲爱好者；若偏好便携性，Timemore C3（约300元）虽略超预算，但其金属机身与防滑设计更适配差旅场景。千元内争议点在于“最优”定义——部分用户认为1Zpresso Q2（约500元）因研磨效率与稳定性更优，但价格已接近上限。建议优先明确需求：重性价比选Hario，重便携选Timemore，预算充足可上1Zpresso。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">千元以内手磨的“最优解”需结合使用场景与核心需求：若追求极致性价比与耐用性，Hario Slim+（约200元）是专业共识推荐，其陶瓷刀盘研磨均匀、可调节粗细，适合手冲爱好者；若偏好便携性，Timemore C3（约300元）虽略超预算，但其金属机身与防滑设计更适配差旅场景。千元内争议点在于“最优”定义——部分用户认为1Zpresso Q2（约500元）因研磨效率与稳定性更优，但价格已接近上限。建议优先明确需求：重性价比选Hario，重便携选Timemore，预算充足可上1Zpresso。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 border-l-4 border-l-morandi-yellow mb-4 md:mb-6 transition-transform duration-500">
+                    <p class="text-base font-semibold text-apple-text dark:text-apple-darkText mb-2">欧卡瑞的电磨怎么样？</p>
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-apple-gray">
+                        <span>cj9959279 提问</span>
+                        <span>·</span><span>22:31</span>
+                        <span>·</span><span class="italic">询问办公室便携电磨推荐。</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI参考</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">欧卡瑞（Ocarina）电磨在咖啡爱好者中口碑较好，定位中高端，主打专业级研磨性能。其核心优势在于：1）刀盘采用高硬度合金钢，研磨均匀度佳，适合意式浓缩、手冲等多种场景；2）多档位精细调节，刻度清晰，重复性好；3）机身设计紧凑，噪音控制优于同类产品。需注意：部分型号（如EG-1）价格较高，且清洁时需拆卸刀盘，建议定期保养以维持性能。适合对研磨均匀度有要求的进阶用户，新手可考虑入门款（如Pharos）降低试错成本。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">欧卡瑞（Ocarina）电磨在咖啡爱好者中口碑较好，定位中高端，主打专业级研磨性能。其核心优势在于：1）刀盘采用高硬度合金钢，研磨均匀度佳，适合意式浓缩、手冲等多种场景；2）多档位精细调节，刻度清晰，重复性好；3）机身设计紧凑，噪音控制优于同类产品。需注意：部分型号（如EG-1）价格较高，且清洁时需拆卸刀盘，建议定期保养以维持性能。适合对研磨均匀度有要求的进阶用户，新手可考虑入门款（如Pharos）降低试错成本。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- ===== 今日问答 FAQ（sticky 堆叠） ===== -->
+        
+        <section class="reveal">
+            <h3 class="text-xl md:text-2xl font-bold mb-6 md:mb-8 tracking-tight">今日问答。</h3>
+            <div class="relative pb-6 md:pb-12">
+                
+                <div class="sticky top-4 z-10 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">Q</span>
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">S5手磨值得买吗？</p>
+                    </div>
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">A</span>
+                        <p class="text-sm text-apple-gray leading-relaxed">hoyi机主评测认为S5甜感好但风味指向差，建议退货。</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        
+                        <span class="text-xs text-apple-gray/60">咖啡设备</span>
+                        
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full text-morandi-green bg-morandi-green/10">已解决</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI验证</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">群友回答基本准确，但表述稍显绝对。Hoji评测确实指出S5甜感突出，但“风味指向差”不够全面——实际是风味集中度较高，适合偏好单一风格（如坚果、可可）的用户，对复杂层次表现一般。  
+
+补充关键信息：S5采用锥刀研磨，粉量均匀性好（±0.2g），适合意式浓缩；但研磨速度较慢（约60秒/20g），且清洁不便，残留豆粉易影响风味。若追求多元风味或高频使用，建议考虑C40或1Zpresso系列；若偏好醇厚甜感且不介意操作，S5可作为入门选择。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">群友回答基本准确，但表述稍显绝对。Hoji评测确实指出S5甜感突出，但“风味指向差”不够全面——实际是风味集中度较高，适合偏好单一风格（如坚果、可可）的用户，对复杂层次表现一般。  
+
+补充关键信息：S5采用锥刀研磨，粉量均匀性好（±0.2g），适合意式浓缩；但研磨速度较慢（约60秒/20g），且清洁不便，残留豆粉易影响风味。若追求多元风味或高频使用，建议考虑C40或1Zpresso系列；若偏好醇厚甜感且不介意操作，S5可作为入门选择。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+                <div class="sticky top-8 z-20 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">Q</span>
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">C40发货问题怎么处理？</p>
+                    </div>
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">A</span>
+                        <p class="text-sm text-apple-gray leading-relaxed">商家保证金不足，部分群友选择接受豆子补偿。</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        
+                        <span class="text-xs text-apple-gray/60">咖啡设备</span>
+                        
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full text-apple-gray bg-apple-lightGray dark:bg-white/5">部分解决</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI验证</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">群友回答部分准确，但遗漏关键细节。C40发货问题核心是商家资金链断裂，保证金不足仅是表象，实际涉及平台对商家的资金监管机制失效。补充信息：1）平台已启动“保证金先行赔付”流程，但需消费者提交订单凭证等材料；2）部分订单因商家库存清空，豆子补偿为临时方案，非最终处理方式；3）建议未收到货的群友立即通过平台客服通道提交维权申请，超时可能影响赔付资格。豆子补偿金额通常为订单金额的10%-30%，具体视平台规则而定。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">群友回答部分准确，但遗漏关键细节。C40发货问题核心是商家资金链断裂，保证金不足仅是表象，实际涉及平台对商家的资金监管机制失效。补充信息：1）平台已启动“保证金先行赔付”流程，但需消费者提交订单凭证等材料；2）部分订单因商家库存清空，豆子补偿为临时方案，非最终处理方式；3）建议未收到货的群友立即通过平台客服通道提交维权申请，超时可能影响赔付资格。豆子补偿金额通常为订单金额的10%-30%，具体视平台规则而定。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+                <div class="sticky top-12 z-30 bg-apple-surface dark:bg-apple-darkSurface rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-apple border border-black/5 dark:border-white/5 mb-4 md:mb-6 transition-transform duration-500">
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">Q</span>
+                        <p class="text-base font-semibold text-apple-text dark:text-apple-darkText">5k以内半自动咖啡机推荐？</p>
+                    </div>
+                    <div class="flex items-start gap-3 mb-3">
+                        <span class="text-xs font-bold text-morandi-green bg-morandi-green/10 px-2.5 py-1 rounded-full flex-shrink-0 mt-0.5">A</span>
+                        <p class="text-sm text-apple-gray leading-relaxed">群友推荐EM30，预算充足可考虑Bianca。</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        
+                        <span class="text-xs text-apple-gray/60">咖啡设备</span>
+                        
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full text-morandi-green bg-morandi-green/10">已解决</span>
+                    </div>
+                    
+                    <div class="ai-mini-card">
+                        <div class="ai-mini-header flex items-center gap-2">
+                            <span class="ai-mini-label">AI验证</span>
+                            
+                            <button type="button" class="expand-btn" onclick="toggleSummary(this)">展开</button>
+                            
+                        </div>
+                        <div class="ai-sheet-source hidden">群友推荐EM30和Bianca基本准确，但需补充细节。EM30作为千元级入门机，压力稳定但蒸汽较弱，适合奶咖新手；Bianca虽预算超5k，但其PID温控、预浸泡和压力表等专业配置，对追求风味精准的玩家更友好。遗漏的关键信息是：5k内半自动推荐还需关注锅炉类型（单/双锅炉），如德龙ECAM22.110.B的双锅炉设计能同时萃取和打奶，效率更高；此外，定期除垢和研磨豆的粗细调节对口感影响极大，新手易忽略。建议根据咖啡种类（意式/美式）和操作耐心选择。</div>
+                        
+                        <div class="summary-text"><div class="summary-text-inner text-sm text-apple-gray leading-relaxed">群友推荐EM30和Bianca基本准确，但需补充细节。EM30作为千元级入门机，压力稳定但蒸汽较弱，适合奶咖新手；Bianca虽预算超5k，但其PID温控、预浸泡和压力表等专业配置，对追求风味精准的玩家更友好。遗漏的关键信息是：5k内半自动推荐还需关注锅炉类型（单/双锅炉），如德龙ECAM22.110.B的双锅炉设计能同时萃取和打奶，效率更高；此外，定期除垢和研磨豆的粗细调节对口感影响极大，新手易忽略。建议根据咖啡种类（意式/美式）和操作耐心选择。</div></div>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </section>
+        
+
+        <!-- 底部统计 -->
+        <section class="reveal border-t border-black/10 dark:border-white/10 pt-12 md:pt-16 relative">
+            <div class="divider-animate absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-morandi-blue/50 to-transparent"></div>
+            <div class="grid grid-cols-2 gap-4 md:gap-8 text-center">
+                <div>
+                    <div class="text-3xl md:text-5xl font-bold tracking-tighter mb-1 md:mb-2 text-morandi-green">8</div>
+                    <div class="text-sm md:text-lg font-semibold mb-1">文件或链接</div>
+                    <div class="text-xs md:text-sm text-apple-gray">群内分享的资源</div>
+                </div>
+                <div>
+                    <div class="text-3xl md:text-5xl font-bold tracking-tighter mb-1 md:mb-2 text-morandi-green">4</div>
+                    <div class="text-sm md:text-lg font-semibold mb-1">话题数</div>
+                    <div class="text-xs md:text-sm text-apple-gray">今日讨论主题</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 上一群/下一群导航 -->
+        <div class="flex items-center justify-between pt-8 pb-4">
+            
+            <button onclick="showDetail('group2')" class="flex items-center gap-2 text-sm font-semibold text-apple-gray hover:text-apple-text dark:hover:text-apple-darkText transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                上一群
+            </button>
+            
+            
+            <button onclick="showSummary()" class="flex items-center gap-2 text-sm font-semibold text-apple-gray hover:text-apple-text dark:hover:text-apple-darkText transition-colors">
+                返回概览
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+            
+        </div>
+
+    </main>
+    
+    <!-- ================= 详情视图结束 ================= -->
+
+    <div id="ai-sheet-overlay" class="ai-sheet-overlay" onclick="if (event.target === this) closeAiSheet()">
+        <div class="ai-sheet-panel">
+            <div class="ai-sheet-topbar flex items-center gap-3">
+                <span id="ai-sheet-title" class="ai-mini-label text-sm">AI补充</span>
+                <button type="button" class="expand-btn" onclick="closeAiSheet()">关闭</button>
+            </div>
+            <div id="ai-sheet-body" class="ai-sheet-body"></div>
+        </div>
+    </div>
+
+</body>
+</html>
