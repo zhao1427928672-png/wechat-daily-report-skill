@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>视频总结 AI 预览</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-[#0E0E0D] text-[#ECECE9]">
+  <div id="root" class="min-h-screen"></div>
+
+  <script type="module">
+    import React from 'https://esm.sh/react@18.3.1';
+    import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
+    import {
+      Settings,
+      UploadCloud,
+      FileText,
+      Sparkles,
+      AlertCircle,
+      CheckCircle2,
+      Play,
+      X,
+      ChevronRight,
+      Hash,
+      History,
+      Eye,
+      Trash2,
+      Printer,
+      LayoutGrid,
+      MessageSquare,
+      BookOpen,
+      User,
+      Clock,
+      Calendar,
+      HelpCircle,
+      FileCode,
+      Compass,
+      Search,
+      BookOpenCheck,
+      Copy,
+      Check,
+      GitFork,
+      Menu,
+      ChevronLeft,
+      Download,
+      Plus,
+      Minus,
+      RefreshCw,
+      Volume2
+    } from 'https://esm.sh/lucide-react@0.542.0';
+
+    Object.assign(window, {
+      React,
+      useState: React.useState,
+      useRef: React.useRef,
+      useEffect: React.useEffect,
+      useMemo: React.useMemo,
+      Settings,
+      UploadCloud,
+      FileText,
+      Sparkles,
+      AlertCircle,
+      CheckCircle2,
+      Play,
+      X,
+      ChevronRight,
+      Hash,
+      History,
+      Eye,
+      Trash2,
+      Printer,
+      LayoutGrid,
+      MessageSquare,
+      BookOpen,
+      User,
+      Clock,
+      Calendar,
+      HelpCircle,
+      FileCode,
+      Compass,
+      Search,
+      BookOpenCheck,
+      Copy,
+      Check,
+      GitFork,
+      Menu,
+      ChevronLeft,
+      Download,
+      Plus,
+      Minus,
+      RefreshCw,
+      Volume2
+    });
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(
+      React.createElement('div', { className: 'min-h-screen flex items-center justify-center text-zinc-400 font-mono text-sm' }, '正在加载预览页...')
+    );
+
+    try {
+      const source = await fetch('./ai.tsx').then((res) => {
+        if (!res.ok) throw new Error(`无法读取 ai.tsx: HTTP ${res.status}`);
+        return res.text();
+      });
+
+      const stripped = source
+        .replace(/^import React,[\s\S]*?from 'react';\n/m, '')
+        .replace(/^import \{[\s\S]*?\} from 'lucide-react';\n/m, '')
+        .replace(/^export default function App\(\)\s*\{/m, 'function App() {');
+
+      const compiled = Babel.transform(stripped, {
+        presets: ['typescript', 'react']
+      }).code;
+
+      const App = new Function(`${compiled}\nreturn App;`)();
+      root.render(React.createElement(App));
+    } catch (error) {
+      console.error(error);
+      root.render(
+        React.createElement(
+          'div',
+          { className: 'min-h-screen flex items-center justify-center p-8' },
+          React.createElement(
+            'div',
+            { className: 'max-w-xl w-full border border-red-900 bg-[#1C0F0E] p-6 text-red-200 rounded-md' },
+            React.createElement('div', { className: 'font-mono text-xs mb-2' }, '预览页加载失败'),
+            React.createElement('pre', { className: 'text-xs whitespace-pre-wrap break-words' }, String(error && error.message ? error.message : error))
+          )
+        )
+      );
+    }
+  </script>
+</body>
+</html>
